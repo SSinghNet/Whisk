@@ -34,6 +34,27 @@ node --version   # should output at least v25.x.x
 
 ---
 
+### Backend (Express.js)
+
+Navigate to the backend directory and install dependencies:
+
+```bash
+cd backend
+npm i
+```
+
+Start the server:
+
+```bash
+# Development mode (with hot reload)
+npm run dev
+
+# Production mode
+npm run start
+```
+
+---
+
 ### Frontend (React Native / Expo)
 
 Navigate to the frontend directory and install dependencies:
@@ -55,27 +76,6 @@ npm run android
 # Expo dev server (scan QR code with Expo Go)
 npx expo start
 ```
-
----
-
-### Backend (Express.js)
-
-Navigate to the backend directory and install dependencies:
-
-```bash
-cd backend
-npm i
-```
-
-Start the server:
-
-```bash
-# Development mode (with hot reload)
-npm run dev
-
-# Production mode
-npm run start
-```
 ---
 
 ## Bug Tracking
@@ -90,6 +90,6 @@ The project uses **GitHub Issues** for bug tracking, feature requests, and task 
 ### Viewing Existing Bugs
 
 - The Issues list shows all open and closed issues.
-- Use the **Labels** filter to filter by `bug`, `feature`
+- Use the **Labels** filter to filter by `bug`, `feature`, etc.
 
 
