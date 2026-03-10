@@ -1,6 +1,7 @@
 import express from 'express';
 import errorHandler from './middleware/errorHandler.js';
 import dbRoutes from './routes/dbRoutes.js';
+import recipeRoutes from './routes/recipeRoutes.js';
 
 const app = express();
 
@@ -11,7 +12,8 @@ app.get('/', (req, res) => {
     res.json({ message: 'Whisk API is running' });
 });
 
-app.use("/db", dbRoutes)
+app.use('/db', dbRoutes)
+app.use('/recipe', recipeRoutes)
 
 app.use(errorHandler);
 
