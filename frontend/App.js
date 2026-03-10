@@ -3,8 +3,10 @@ import {
     ActivityIndicator, FlatList, ScrollView, StatusBar,
     StyleSheet, Text, TouchableOpacity, View
 } from 'react-native';
+import Constants from 'expo-constants';
 
-const API_URL = 'http://10.75.243.13:3000';
+const host = Constants.expoConfig?.hostUri?.split(':')[0] ?? 'localhost';
+const API_URL = `http://${host}:3000`;
 
 function RecipeList({ recipes, onSelect }) {
     return (
