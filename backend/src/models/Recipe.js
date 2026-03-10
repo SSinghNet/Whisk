@@ -1,4 +1,4 @@
-class Recipe{
+class RecipeResponse {
     constructor(data){
         this.id = data.recipe_id;
         this.title = data.title;
