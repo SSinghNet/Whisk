@@ -2,7 +2,6 @@ import express from 'express';
 import errorHandler from './middleware/errorHandler.js';
 import dbRoutes from './routes/dbRoutes.js';
 
-
 const app = express();
 
 app.use(express.json());
