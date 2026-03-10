@@ -1,12 +1,67 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, StatusBar, StyleSheet, Text, View } from 'react-native';
+import {
+    ActivityIndicator, FlatList, ScrollView, StatusBar,
+    StyleSheet, Text, TouchableOpacity, View
+} from 'react-native';
 
 const API_URL = 'http://10.75.243.13:3000';
+
+function RecipeList({ recipes, onSelect }) {
+    return (
+        <View style={styles.container}>
+            <Text style={styles.header}>Recipes</Text>
+            <FlatList
+                data={recipes}
+                keyExtractor={item => String(item.id)}
+                renderItem={({ item }) => (
+                    <TouchableOpacity style={styles.card} onPress={() => onSelect(item)}>
+                        <Text style={styles.cardTitle}>{item.title}</Text>
+                        <Text style={styles.meta}>
+                            {item.ingredients.length} ingredient{item.ingredients.length !== 1 ? 's' : ''}
+                        </Text>
+                        <Text style={styles.ingredientPreview}>
+                            {item.ingredients.map(i => i.name).join(', ')}
+                        </Text>
+                    </TouchableOpacity>
+                )}
+                ListEmptyComponent={<Text style={styles.empty}>No recipes yet.</Text>}
+            />
+        </View>
+    );
+}
+
+function RecipeDetail({ recipe, onBack }) {
+    return (
+        <ScrollView style={styles.container}>
+            <TouchableOpacity onPress={onBack} style={styles.backBtn}>
+                <Text style={styles.backText}>← Back</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.header}>{recipe.title}</Text>
+
+            <Text style={styles.sectionLabel}>Ingredients</Text>
+            {recipe.ingredients.map((ing, idx) => (
+                <View key={idx} style={styles.ingredientRow}>
+                    <Text style={styles.ingredientName}>{ing.name}</Text>
+                    <Text style={styles.ingredientAmount}>
+                        {ing.amount != null ? `${ing.amount} ${ing.unit}` : ing.unit}
+                    </Text>
+                </View>
+            ))}
+
+            <Text style={styles.sectionLabel}>Instructions</Text>
+            <Text style={styles.instructions}>
+                {recipe.instructions ?? 'No instructions provided.'}
+            </Text>
+        </ScrollView>
+    );
+}
 
 export default function App() {
     const [recipes, setRecipes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [selected, setSelected] = useState(null);
 
     useEffect(() => {
         fetch(`${API_URL}/recipe`)
@@ -33,26 +88,13 @@ export default function App() {
     }
 
     return (
-        <View style={styles.container}>
-            <StatusBar style="auto" />
-            <Text style={styles.header}>Recipes</Text>
-            <FlatList
-                data={recipes}
-                keyExtractor={item => String(item.id)}
-                renderItem={({ item }) => (
-                    <View style={styles.card}>
-                        <Text style={styles.title}>{item.title}</Text>
-                        <Text style={styles.meta}>
-                            {item.ingredients.length} ingredient{item.ingredients.length !== 1 ? 's' : ''}
-                        </Text>
-                        <Text style={styles.ingredients}>
-                            {item.ingredients.map(i => i.name).join(', ')}
-                        </Text>
-                    </View>
-                )}
-                ListEmptyComponent={<Text style={styles.empty}>No recipes yet.</Text>}
-            />
-        </View>
+        <>
+            <StatusBar barStyle="dark-content" />
+            {selected
+                ? <RecipeDetail recipe={selected} onBack={() => setSelected(null)} />
+                : <RecipeList recipes={recipes} onSelect={setSelected} />
+            }
+        </>
     );
 }
 
@@ -79,7 +121,7 @@ const styles = StyleSheet.create({
         padding: 16,
         marginBottom: 12,
     },
-    title: {
+    cardTitle: {
         fontSize: 18,
         fontWeight: '600',
         marginBottom: 4,
@@ -89,9 +131,45 @@ const styles = StyleSheet.create({
         color: '#888',
         marginBottom: 4,
     },
-    ingredients: {
+    ingredientPreview: {
         fontSize: 14,
         color: '#555',
+    },
+    backBtn: {
+        marginBottom: 12,
+    },
+    backText: {
+        fontSize: 16,
+        color: '#007AFF',
+    },
+    sectionLabel: {
+        fontSize: 18,
+        fontWeight: '600',
+        marginTop: 16,
+        marginBottom: 10,
+    },
+    ingredientRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingVertical: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+    },
+    ingredientName: {
+        fontSize: 15,
+        color: '#222',
+        textTransform: 'capitalize',
+    },
+    ingredientAmount: {
+        fontSize: 15,
+        color: '#555',
+    },
+    instructions: {
+        fontSize: 15,
+        color: '#333',
+        lineHeight: 24,
+        marginTop: 4,
+        marginBottom: 40,
     },
     error: {
         color: 'red',
