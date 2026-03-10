@@ -1,4 +1,92 @@
 # Whisk
+# Running Whisk
+
+This guide walks you through everything you need to get the Whisk app running on your local machine.
+
+---
+
+## 1. Prerequisites
+
+Before you begin, make sure you have the following installed:
+
+### Node.js
+Whisk's frontend tooling requires **Node.js v25.7.0 or higher**.
+
+1. Visit [https://nodejs.org/](https://nodejs.org/) and download the latest version
+2. Run the installer and follow the on-screen instructions
+3. Once installed, open a terminal and verify your version:
+```bash
+node --version   # should output v25.x.x or higher
+```
+If the version shown is lower than `v25.7.0`, please update Node.js before continuing.
+
+---
+
+## 2. Clone the Repository
+
+Open a terminal and run the following commands to download the project to your machine:
+```bash
+git clone https://github.com/SSinghNet/Whisk.git
+cd Whisk
+```
+
+This will create a `Whisk/` folder in your current directory and navigate into it.
+
+---
+
+## 3. Install Frontend Dependencies
+
+Navigate into the `frontend/` directory and install the required packages:
+```bash
+cd frontend
+npm install
+```
+
+This will download all dependencies listed in `package.json` into a local `node_modules/` folder. This may take a minute — wait until the terminal returns to a prompt before continuing.
+
+---
+
+## 4. Set Up an Emulator
+
+The app runs on iOS or Android. You must have an emulator (or physical device) ready **before** starting the app.
+
+### iOS (Mac only)
+1. Install **Xcode** from the [Mac App Store](https://apps.apple.com/us/app/xcode/id497799835)
+2. Open Xcode → go to **Settings → Platforms** and download an iOS Simulator runtime
+3. Open the simulator by going to **Xcode → Open Developer Tool → Simulator**, or run:
+```bash
+open -a Simulator
+```
+4. Wait for the simulator to fully boot (you should see a home screen) before proceeding
+
+### Android (Mac, Windows, or Linux)
+1. Install **Android Studio** from [https://developer.android.com/studio](https://developer.android.com/studio)
+2. During setup, ensure **Android Virtual Device (AVD)** is selected for installation
+3. Open Android Studio → click **More Actions → Virtual Device Manager**
+4. Select an existing device and click the **▶ Play** button to launch it, or create a new one via **Create Device**
+5. Wait for the emulator to fully boot (you should see a home screen) before proceeding
+
+> ⚠️ The emulator must be fully booted and showing a home screen before you run the app. Starting the app before the emulator is ready is the most common cause of launch failures.
+
+---
+
+## 5. Run the App
+
+From the `frontend/` directory, run the command that matches your emulator:
+
+### iOS
+```bash
+npm run ios
+```
+
+### Android
+```bash
+npm run android
+```
+
+Expo will bundle the app and launch it directly in your running emulator. The first build may take 1–2 minutes. Once complete, the Whisk app will open automatically on the emulator screen.
+
+> **Note:** The backend API is already hosted and running — you do not need to set up or start the backend yourself. Simply running the frontend is enough to use the full app.
 
 ## Source Control & Build Process
 
