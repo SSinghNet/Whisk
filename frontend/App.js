@@ -17,10 +17,10 @@ function RecipeList({ recipes, onSelect }) {
                     <TouchableOpacity style={styles.card} onPress={() => onSelect(item)}>
                         <Text style={styles.cardTitle}>{item.title}</Text>
                         <Text style={styles.meta}>
-                            {item.ingredients.length} ingredient{item.ingredients.length !== 1 ? 's' : ''}
+                            {(item.ingredients ?? []).length} ingredient{(item.ingredients ?? []).length !== 1 ? 's' : ''}
                         </Text>
                         <Text style={styles.ingredientPreview}>
-                            {item.ingredients.map(i => i.name).join(', ')}
+                            {(item.ingredients ?? []).map(i => i.name).join(', ')}
                         </Text>
                     </TouchableOpacity>
                 )}
