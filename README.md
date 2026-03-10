@@ -78,6 +78,46 @@ npx expo start
 ```
 ---
 
+## Data Storage & Access
+
+Whisk uses a **PostgreSQL database hosted on Supabase** (cloud-managed, always-on). No local database setup is required.
+
+- **Host:** `aws-1-us-east-1.pooler.supabase.com`
+- **Port:** `5432`
+- **Database:** `postgres`
+
+### Option 1 — psql (command line)
+
+```bash
+psql "postgresql://postgres.ysdqwrnzxumfrkkcczyi:[PASSWORD]@aws-1-us-east-1.pooler.supabase.com:5432/postgres"
+```
+
+Once connected, run this query to see all recipes and their ingredients:
+
+```sql
+SELECT r.title, i.name, ri.amount, ri.unit
+FROM recipe r
+JOIN recipe_ingredient ri ON r.recipe_id = ri.recipe_id
+JOIN ingredient i ON ri.ingredient_id = i.ingredient_id;
+```
+
+> The database password is provided separately and is not stored in the repository.
+
+### Option 2 — Any PostgreSQL GUI (TablePlus, DBeaver, pgAdmin)
+
+Use the following connection details:
+
+| Field    | Value                                                   |
+|----------|---------------------------------------------------------|
+| Host     | `aws-1-us-east-1.pooler.supabase.com`                  |
+| Port     | `5432`                                                  |
+| Database | `postgres`                                              |
+| Username | `postgres.ysdqwrnzxumfrkkcczyi`                        |
+| Password | *(provided separately)*                                 |
+| SSL      | Required                                                |
+
+---
+
 ## Bug Tracking
 
 The project uses **GitHub Issues** for bug tracking, feature requests, and task management.
