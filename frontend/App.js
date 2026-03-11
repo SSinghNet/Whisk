@@ -5,8 +5,13 @@ import {
 } from 'react-native';
 import Constants from 'expo-constants';
 
-const host = Constants.expoConfig?.hostUri?.split(':')[0] ?? 'localhost';
-const API_URL = `http://${host}:3000`;
+const host = Constants.expoConfig?.hostUri?.split(":")[0] ?? "localhost";
+export const API_URL =
+  process.env.EXPO_PUBLIC_APP_ENV === "production"
+    ? "https://whisk-lznv.onrender.com"
+    : `http://${host}:3000`;
+
+
 
 function RecipeList({ recipes, onSelect }) {
     return (

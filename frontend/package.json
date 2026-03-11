@@ -6,7 +6,9 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "prod:android": "EXPO_PUBLIC_APP_ENV=production expo start --android",
+    "prod:ios": "EXPO_PUBLIC_APP_ENV=production expo start --ios"
   },
   "dependencies": {
     "expo": "~55.0.4",
