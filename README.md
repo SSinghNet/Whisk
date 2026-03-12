@@ -1,5 +1,5 @@
 # Whisk
-# Running Whisk
+# Running Whisk (Production)
 
 This guide walks you through everything you need to get the Whisk app running on your local machine.
 
@@ -76,12 +76,12 @@ From the `frontend/` directory, run the command that matches your emulator:
 
 ### iOS
 ```bash
-npm run ios
+npm run prod:ios
 ```
 
 ### Android
 ```bash
-npm run android
+npm run prod:android
 ```
 
 Expo will bundle the app and launch it directly in your running emulator. The first build may take 1–2 minutes. Once complete, the Whisk app will open automatically on the emulator screen.
