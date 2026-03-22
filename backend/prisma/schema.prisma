@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model app_user {
+  user_id       BigInt        @id @default(autoincrement())
+  email         String        @unique @db.VarChar(255)
+  password_hash String        @db.VarChar(255)
+  created_at    DateTime      @default(now()) @db.Timestamptz(6)
+  pantry        pantry?
+  recipe        recipe[]
+  recipe_list   recipe_list[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model ingredient {
+  ingredient_id        BigInt              @id @default(autoincrement())
+  name                 String              @unique @db.VarChar(255)
+  parent_ingredient_id BigInt?
+  created_at           DateTime            @default(now()) @db.Timestamptz(6)
+  ingredient           ingredient?         @relation("ingredientToingredient", fields: [parent_ingredient_id], references: [ingredient_id], onUpdate: NoAction, map: "fk_ingredient_parent")
+  other_ingredient     ingredient[]        @relation("ingredientToingredient")
+  pantry_ingredient    pantry_ingredient[]
+  product              product[]
+  recipe_ingredient    recipe_ingredient[]
+
+  @@index([parent_ingredient_id], map: "idx_ingredient_parent")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model label {
+  label_id      BigInt          @id @default(autoincrement())
+  name          String          @unique @db.VarChar(255)
+  product_label product_label[]
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pantry {
+  pantry_id         BigInt              @id @default(autoincrement())
+  user_id           BigInt              @unique
+  app_user          app_user            @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_pantry_user")
+  pantry_ingredient pantry_ingredient[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model pantry_ingredient {
+  pantry_id     BigInt
+  ingredient_id BigInt
+  quantity      Decimal?   @db.Decimal(10, 3)
+  unit          unit_code
+  expiry_date   DateTime?  @db.Date
+  ingredient    ingredient @relation(fields: [ingredient_id], references: [ingredient_id], onUpdate: NoAction, map: "fk_pi_ingredient")
+  pantry        pantry     @relation(fields: [pantry_id], references: [pantry_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_pi_pantry")
+
+  @@id([pantry_id, ingredient_id])
+  @@index([ingredient_id], map: "idx_pantry_ingredient_ingredient_id")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model product {
+  product_id    BigInt          @id @default(autoincrement())
+  barcode       String          @unique @db.VarChar(14)
+  product_name  String?         @db.VarChar(512)
+  brand         String?         @db.VarChar(255)
+  ingredient_id BigInt
+  default_unit  unit_code       @default(count)
+  created_at    DateTime        @default(now()) @db.Timestamptz(6)
+  ingredient    ingredient      @relation(fields: [ingredient_id], references: [ingredient_id], onUpdate: NoAction, map: "fk_product_ingredient")
+  product_label product_label[]
+
+  @@index([ingredient_id], map: "idx_product_ingredient")
+  @@index([product_name], map: "idx_product_name")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model product_label {
+  product_id BigInt
+  label_id   BigInt
+  label      label   @relation(fields: [label_id], references: [label_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_pl_label")
+  product    product @relation(fields: [product_id], references: [product_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_pl_product")
+
+  @@id([product_id, label_id])
+  @@index([label_id], map: "idx_product_label_label_id")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model recipe {
+  recipe_id         BigInt              @id @default(autoincrement())
+  user_id           BigInt
+  title             String              @db.VarChar(255)
+  instructions      String?
+  image_url         String?
+  yield_amount      Decimal?            @db.Decimal(10, 3)
+  yield_unit        unit_code?
+  created_at        DateTime            @default(now()) @db.Timestamptz(6)
+  app_user          app_user            @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_recipe_user")
+  recipe_ingredient recipe_ingredient[]
+  recipe_list_item  recipe_list_item[]
+
+  @@index([user_id], map: "idx_recipe_user")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model recipe_ingredient {
+  recipe_id     BigInt
+  ingredient_id BigInt
+  amount        Decimal?   @db.Decimal(10, 3)
+  unit          unit_code
+  ingredient    ingredient @relation(fields: [ingredient_id], references: [ingredient_id], onUpdate: NoAction, map: "fk_ri_ingredient")
+  recipe        recipe     @relation(fields: [recipe_id], references: [recipe_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_ri_recipe")
+
+  @@id([recipe_id, ingredient_id])
+  @@index([ingredient_id], map: "idx_recipe_ingredient_ingredient_id")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model recipe_list {
+  list_id          BigInt             @id @default(autoincrement())
+  user_id          BigInt
+  name             String             @db.VarChar(255)
+  created_at       DateTime           @default(now()) @db.Timestamptz(6)
+  app_user         app_user           @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_recipe_list_user")
+  recipe_list_item recipe_list_item[]
+
+  @@unique([user_id, name], map: "uq_recipe_list_user_name")
+  @@index([user_id], map: "idx_recipe_list_user")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model recipe_list_item {
+  list_id     BigInt
+  recipe_id   BigInt
+  added_at    DateTime    @default(now()) @db.Timestamptz(6)
+  recipe_list recipe_list @relation(fields: [list_id], references: [list_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_rli_list")
+  recipe      recipe      @relation(fields: [recipe_id], references: [recipe_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_rli_recipe")
+
+  @@id([list_id, recipe_id])
+  @@index([recipe_id], map: "idx_recipe_list_item_recipe_id")
+}
+
+enum unit_code {
+  count
+  gram
+  ounce
+  pound
+  milliliter
+  liter
+  gallon
+  cup
+  tablespoon
+  teaspoon
+}
