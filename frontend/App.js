@@ -6,6 +6,8 @@ import {
 import Constants from 'expo-constants';
 import IngredientForm from './screens/IngredientForm';
 import IngredientList from './screens/IngredientList';
+import LoginScreen from './screens/LoginScreen';
+import SignupScreen from './screens/SignupScreen';
 
 const host = Constants.expoConfig?.hostUri?.split(":")[0] ?? "localhost";
 export const API_URL =
@@ -67,18 +69,82 @@ function RecipeDetail({ recipe, onBack }) {
 }
 
 export default function App() {
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [authMode, setAuthMode] = useState('login');
+    const [authLoading, setAuthLoading] = useState(false);
+    const [authError, setAuthError] = useState(null);
+
     const [recipes, setRecipes] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [selected, setSelected] = useState(null);
 
     useEffect(() => {
+        if (!isAuthenticated) {
+            return;
+        }
+
+        setLoading(true);
+        setError(null);
+
         fetch(`${API_URL}/recipe`)
             .then(res => res.json())
             .then(data => setRecipes(data))
             .catch(err => setError(err.message))
             .finally(() => setLoading(false));
-    }, []);
+    }, [isAuthenticated]);
+
+    function handleLogin(_formData) {
+        setAuthLoading(true);
+        setAuthError(null);
+
+        // Temporary client-side auth flow until backend user endpoints are ready.
+        setTimeout(() => {
+            setIsAuthenticated(true);
+            setAuthLoading(false);
+        }, 350);
+    }
+
+    function handleSignup(formData) {
+        setAuthLoading(true);
+        setAuthError(null);
+
+        if (formData.password !== formData.confirmPassword) {
+            setAuthError('Passwords do not match.');
+            setAuthLoading(false);
+            return;
+        }
+
+        // Temporary client-side signup flow until backend user endpoints are ready.
+        setTimeout(() => {
+            setIsAuthenticated(true);
+            setAuthLoading(false);
+        }, 350);
+    }
+
+    if (!isAuthenticated) {
+        return authMode === 'login' ? (
+            <LoginScreen
+                onLogin={handleLogin}
+                onSwitchToSignup={() => {
+                    setAuthError(null);
+                    setAuthMode('signup');
+                }}
+                loading={authLoading}
+                error={authError}
+            />
+        ) : (
+            <SignupScreen
+                onSignup={handleSignup}
+                onSwitchToLogin={() => {
+                    setAuthError(null);
+                    setAuthMode('login');
+                }}
+                loading={authLoading}
+                error={authError}
+            />
+        );
+    }
 
     if (loading) {
         return (
