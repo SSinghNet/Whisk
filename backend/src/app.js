@@ -7,7 +7,7 @@ import errorHandler from './middleware/errorHandler.js'
 import dbRoutes from './routes/dbRoutes.js'
 import recipeRoutes from './routes/recipeRoutes.js'
 import userRoutes from './routes/userRoutes.js'
-
+import ingredientRoutes from './routes/ingredientRoutes.js'
 
 const app = express()
 
@@ -21,6 +21,7 @@ app.get('/', (_req, res) => {
 app.use('/db', dbRoutes)
 app.use('/recipe', recipeRoutes)
 app.use('/users', userRoutes)
+app.use('/ingredient', ingredientRoutes)
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(generateOpenAPIDocument()))
 
 app.use(errorHandler)

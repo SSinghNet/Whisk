@@ -10,28 +10,24 @@ datasource db {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model app_user {
-  user_id       BigInt        @id @default(autoincrement())
-  email         String        @unique @db.VarChar(255)
-  password_hash String        @db.VarChar(255)
-  created_at    DateTime      @default(now()) @db.Timestamptz(6)
-  pantry        pantry?
-  recipe        recipe[]
-  recipe_list   recipe_list[]
+  user_id           BigInt              @id @default(autoincrement())
+  email             String              @unique @db.VarChar(255)
+  password_hash     String              @default("") @db.VarChar(255)
+  created_at        DateTime            @default(now()) @db.Timestamptz(6)
+  supabase_uid      String              @unique @db.Uuid
+  pantry_ingredient pantry_ingredient[]
+  recipe            recipe[]
+  recipe_list       recipe_list[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model ingredient {
-  ingredient_id        BigInt              @id @default(autoincrement())
-  name                 String              @unique @db.VarChar(255)
-  parent_ingredient_id BigInt?
-  created_at           DateTime            @default(now()) @db.Timestamptz(6)
-  ingredient           ingredient?         @relation("ingredientToingredient", fields: [parent_ingredient_id], references: [ingredient_id], onUpdate: NoAction, map: "fk_ingredient_parent")
-  other_ingredient     ingredient[]        @relation("ingredientToingredient")
-  pantry_ingredient    pantry_ingredient[]
-  product              product[]
-  recipe_ingredient    recipe_ingredient[]
-
-  @@index([parent_ingredient_id], map: "idx_ingredient_parent")
+  ingredient_id     BigInt              @id @default(autoincrement())
+  name              String              @unique @db.VarChar(255)
+  created_at        DateTime            @default(now()) @db.Timestamptz(6)
+  pantry_ingredient pantry_ingredient[]
+  product           product[]
+  recipe_ingredient recipe_ingredient[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -41,26 +37,18 @@ model label {
   product_label product_label[]
 }
 
-/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
-model pantry {
-  pantry_id         BigInt              @id @default(autoincrement())
-  user_id           BigInt              @unique
-  app_user          app_user            @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_pantry_user")
-  pantry_ingredient pantry_ingredient[]
-}
-
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model pantry_ingredient {
-  pantry_id     BigInt
+  user_id       BigInt
   ingredient_id BigInt
   quantity      Decimal?   @db.Decimal(10, 3)
   unit          unit_code
   expiry_date   DateTime?  @db.Date
   ingredient    ingredient @relation(fields: [ingredient_id], references: [ingredient_id], onUpdate: NoAction, map: "fk_pi_ingredient")
-  pantry        pantry     @relation(fields: [pantry_id], references: [pantry_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_pi_pantry")
+  app_user      app_user   @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@id([pantry_id, ingredient_id])
+  @@id([user_id, ingredient_id])
   @@index([ingredient_id], map: "idx_pantry_ingredient_ingredient_id")
 }
 
@@ -114,7 +102,7 @@ model recipe {
 model recipe_ingredient {
   recipe_id     BigInt
   ingredient_id BigInt
-  amount        Decimal?   @db.Decimal(10, 3)
+  quantity      Decimal?   @db.Decimal(10, 3)
   unit          unit_code
   ingredient    ingredient @relation(fields: [ingredient_id], references: [ingredient_id], onUpdate: NoAction, map: "fk_ri_ingredient")
   recipe        recipe     @relation(fields: [recipe_id], references: [recipe_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_ri_recipe")
