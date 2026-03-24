@@ -6,6 +6,7 @@ import {
 import Constants from 'expo-constants';
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
+import { supabase } from './lib/supabase';
 
 const host = Constants.expoConfig?.hostUri?.split(":")[0] ?? "localhost";
 export const API_URL =
@@ -67,7 +68,7 @@ function RecipeDetail({ recipe, onBack }) {
 }
 
 export default function App() {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [session, setSession] = useState(null);
     const [authMode, setAuthMode] = useState('login');
     const [authLoading, setAuthLoading] = useState(false);
     const [authError, setAuthError] = useState(null);
@@ -78,32 +79,42 @@ export default function App() {
     const [selected, setSelected] = useState(null);
 
     useEffect(() => {
-        if (!isAuthenticated) {
+        if (!session) {
             return;
         }
 
         setLoading(true);
         setError(null);
 
-        fetch(`${API_URL}/recipe`)
+        fetch(`${API_URL}/recipe`, {
+            headers: { Authorization: `Bearer ${session.access_token}` },
+        })
             .then(res => res.json())
             .then(data => setRecipes(data))
             .catch(err => setError(err.message))
             .finally(() => setLoading(false));
-    }, [isAuthenticated]);
+    }, [session]);
 
-    function handleLogin(_formData) {
+    async function handleLogin(formData) {
         setAuthLoading(true);
         setAuthError(null);
 
-        // Temporary client-side auth flow until backend user endpoints are ready.
-        setTimeout(() => {
-            setIsAuthenticated(true);
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: formData.email,
+            password: formData.password,
+        });
+
+        if (error) {
+            setAuthError(error.message);
             setAuthLoading(false);
-        }, 350);
+            return;
+        }
+
+        setSession(data.session);
+        setAuthLoading(false);
     }
 
-    function handleSignup(formData) {
+    async function handleSignup(formData) {
         setAuthLoading(true);
         setAuthError(null);
 
@@ -113,14 +124,27 @@ export default function App() {
             return;
         }
 
-        // Temporary client-side signup flow until backend user endpoints are ready.
-        setTimeout(() => {
-            setIsAuthenticated(true);
+        const { data, error } = await supabase.auth.signUp({
+            email: formData.email,
+            password: formData.password,
+        });
+
+        if (error) {
+            setAuthError(error.message);
             setAuthLoading(false);
-        }, 350);
+            return;
+        }
+
+        await fetch(`${API_URL}/users/register`, {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${data.session.access_token}` },
+        });
+
+        setSession(data.session);
+        setAuthLoading(false);
     }
 
-    if (!isAuthenticated) {
+    if (!session) {
         return authMode === 'login' ? (
             <LoginScreen
                 onLogin={handleLogin}
@@ -160,9 +184,19 @@ export default function App() {
         );
     }
 
+    async function handleLogout() {
+        await supabase.auth.signOut();
+        setSession(null);
+        setRecipes([]);
+        setSelected(null);
+    }
+
     return (
         <>
             <StatusBar barStyle="dark-content" />
+            <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+                <Text style={styles.logoutText}>Log out</Text>
+            </TouchableOpacity>
             {selected
                 ? <RecipeDetail recipe={selected} onBack={() => setSelected(null)} />
                 : <RecipeList recipes={recipes} onSelect={setSelected} />
@@ -252,5 +286,16 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         color: '#aaa',
         marginTop: 40,
+    },
+    logoutBtn: {
+        position: 'absolute',
+        top: 16,
+        right: 16,
+        zIndex: 10,
+    },
+    logoutText: {
+        color: '#dc2626',
+        fontSize: 14,
+        fontWeight: '500',
     },
 });

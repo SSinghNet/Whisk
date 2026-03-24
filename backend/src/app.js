@@ -4,6 +4,7 @@ import './schemas/index.schema.js'
 import './lib/bigint.js'   
 import { generateOpenAPIDocument } from './lib/swagger.js'
 import errorHandler from './middleware/errorHandler.js'
+import auth from './middleware/auth.js'
 import dbRoutes from './routes/dbRoutes.js'
 import recipeRoutes from './routes/recipeRoutes.js'
 import userRoutes from './routes/userRoutes.js'
@@ -19,8 +20,8 @@ app.get('/', (_req, res) => {
 })
 
 app.use('/db', dbRoutes)
-app.use('/recipe', recipeRoutes)
-app.use('/users', userRoutes)
+app.use('/recipe', auth, recipeRoutes)
+app.use('/users', auth, userRoutes)
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(generateOpenAPIDocument()))
 
 app.use(errorHandler)
