@@ -4,6 +4,8 @@ import {
     StyleSheet, Text, TouchableOpacity, View
 } from 'react-native';
 import Constants from 'expo-constants';
+import IngredientForm from './screens/IngredientForm';
+import IngredientList from './screens/IngredientList';
 
 const host = Constants.expoConfig?.hostUri?.split(":")[0] ?? "localhost";
 export const API_URL =
@@ -97,10 +99,12 @@ export default function App() {
     return (
         <>
             <StatusBar barStyle="dark-content" />
-            {selected
+            {/* {selected
                 ? <RecipeDetail recipe={selected} onBack={() => setSelected(null)} />
                 : <RecipeList recipes={recipes} onSelect={setSelected} />
-            }
+            } */}
+            <IngredientForm />
+            <IngredientList />
         </>
     );
 }
