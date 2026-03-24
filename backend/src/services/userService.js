@@ -1,30 +1,29 @@
 import prisma from '../lib/prisma.js'
 
-export async function getUserById(userId) {
+export async function createUser(supabaseUid, email) {
+  return await prisma.app_user.create({
+    data: { supabase_uid: supabaseUid, email },
+    select: { user_id: true, email: true, created_at: true },
+  })
+}
+
+export async function getUserBySupabaseUid(supabaseUid) {
   return await prisma.app_user.findUnique({
-    where: { user_id: userId },
-    select: {
-      user_id:    true,
-      email:      true,
-      created_at: true,
-    }
+    where: { supabase_uid: supabaseUid },
+    select: { user_id: true, email: true, created_at: true },
   })
 }
 
-export async function updateUser(userId, data) {
+export async function updateUser(supabaseUid, data) {
   return await prisma.app_user.update({
-    where: { user_id: userId },
+    where: { supabase_uid: supabaseUid },
     data,
-    select: {
-      user_id:    true,
-      email:      true,
-      created_at: true,
-    }
+    select: { user_id: true, email: true, created_at: true },
   })
 }
 
-export async function deleteUser(userId) {
+export async function deleteUser(supabaseUid) {
   return await prisma.app_user.delete({
-    where: { user_id: userId }
+    where: { supabase_uid: supabaseUid },
   })
 }

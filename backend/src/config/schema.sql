@@ -29,8 +29,9 @@ END$$;
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS app_user (
   user_id       BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  supabase_uid  UUID         NOT NULL UNIQUE,
   email         VARCHAR(255) NOT NULL UNIQUE,
-  password_hash VARCHAR(255) NOT NULL,
+  password_hash VARCHAR(255) NOT NULL DEFAULT '',
   created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW()
 );
 

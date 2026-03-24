@@ -26,10 +26,13 @@ const RECIPE_WITH_INGREDIENTS = `
     LEFT JOIN ingredient i ON ri.ingredient_id = i.ingredient_id
 `;
 
-export const getRecipes = async (_req, res, next) => {
+export const getRecipes = async (req, res, next) => {
     try {
         const { rows } = await pool.query(
-            RECIPE_WITH_INGREDIENTS + ' GROUP BY r.recipe_id ORDER BY r.created_at DESC'
+            RECIPE_WITH_INGREDIENTS +
+            ` WHERE r.user_id = (SELECT user_id FROM app_user WHERE supabase_uid = $1)
+             GROUP BY r.recipe_id ORDER BY r.created_at DESC`,
+            [req.user.id]
         );
         res.json(rows.map(row => new RecipeResponse(row)));
     } catch (err) {
@@ -42,8 +45,11 @@ export const getRecipe = async (req, res, next) => {
     const { id } = req.params;
     try {
         const { rows } = await pool.query(
-            RECIPE_WITH_INGREDIENTS + ' WHERE r.recipe_id = $1 GROUP BY r.recipe_id',
-            [id]
+            RECIPE_WITH_INGREDIENTS +
+            ` WHERE r.recipe_id = $1
+              AND r.user_id = (SELECT user_id FROM app_user WHERE supabase_uid = $2)
+             GROUP BY r.recipe_id`,
+            [id, req.user.id]
         );
         if (rows.length === 0) {
             return res.status(404).json({ message: 'Recipe not found' });
