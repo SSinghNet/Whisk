@@ -1,41 +1,58 @@
 import { z } from 'zod'
 import { registry } from '../lib/swagger.js'
-import { BigIntId, Timestamp } from './shared.schema.js'
 
-// Response schema 
+
 export const UserResponseSchema = registry.register(
   'User',
   z.object({
-    user_id:    BigIntId,
+    user_id:    z.number(),
     email:      z.email(),
-    created_at: Timestamp,
+    created_at: z.iso.datetime(),
   })
 )
 
-// Create schema 
-export const CreateUserSchema = z.object({
-  email:    z.email(),
-  password: z.string().min(8),
+export const UpdateUserSchema = z.object({
+  email: z.email(),
 })
 
-
-
-// Register routes with Swagger
 registry.registerPath({
-  method: 'post',
-  path: '/users/register',
-  summary: 'Register a new user',
+  method: 'get',
+  path: '/users/me',
+  summary: 'Get current user profile',
+  tags: ['Users'],
+  responses: {
+    200: {
+      description: 'User profile',
+      content: { 'application/json': { schema: UserResponseSchema } }
+    },
+    404: { description: 'User not found' }
+  }
+})
+
+registry.registerPath({
+  method: 'put',
+  path: '/users/me',
+  summary: 'Update current user email',
   tags: ['Users'],
   request: {
     body: {
-      content: { 'application/json': { schema: CreateUserSchema } }
+      content: { 'application/json': { schema: UpdateUserSchema } }
     }
   },
   responses: {
-    201: {
-      description: 'User created',
+    200: {
+      description: 'User updated',
       content: { 'application/json': { schema: UserResponseSchema } }
     }
   }
 })
 
+registry.registerPath({
+method: 'delete',
+  path: '/users/me',
+  summary: 'Delete current user account',
+  tags: ['Users'],
+  responses: {
+    204: { description: 'User deleted' }
+  }
+})

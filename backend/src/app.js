@@ -1,11 +1,14 @@
 import express from 'express'
 import swaggerUi from 'swagger-ui-express'
+import './schemas/index.schema.js'
+import './lib/bigint.js'   
 import { generateOpenAPIDocument } from './lib/swagger.js'
-
 import errorHandler from './middleware/errorHandler.js'
 import dbRoutes from './routes/dbRoutes.js'
 import recipeRoutes from './routes/recipeRoutes.js'
-import './schemas/index.schema.js'
+import userRoutes from './routes/userRoutes.js'
+
+
 const app = express()
 
 app.use(express.json())
@@ -17,6 +20,7 @@ app.get('/', (_req, res) => {
 
 app.use('/db', dbRoutes)
 app.use('/recipe', recipeRoutes)
+app.use('/users', userRoutes)
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(generateOpenAPIDocument()))
 
 app.use(errorHandler)
