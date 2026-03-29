@@ -79,6 +79,7 @@ export default function App() {
     useEffect(() => {
         if (!session || activeScreen !== 'recipes') return;
 
+        console.log(session.access_token)
         const fetchRecipes = async () => {
             setLoading(true);
             setError(null);
@@ -95,7 +96,7 @@ export default function App() {
             }
         };
 
-        fetchRecipes();
+        // fetchRecipes();
     }, [session, activeScreen]);
 
     async function handleLogin(formData) {
@@ -207,11 +208,11 @@ export default function App() {
                 </TouchableOpacity>
             </View>
 
-            {activeScreen === 'recipes' && (
+            {/* {activeScreen === 'recipes' && (
                 selectedRecipe
                     ? <RecipeDetail recipe={selectedRecipe} onBack={() => setSelectedRecipe(null)} />
                     : <RecipeList recipes={recipes} onSelect={setSelectedRecipe} />
-            )}
+            )} */}
 
             {activeScreen === 'pantry' && (
                 <PantryScreen

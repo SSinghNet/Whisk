@@ -16,8 +16,8 @@ model app_user {
   created_at        DateTime            @default(now()) @db.Timestamptz(6)
   supabase_uid      String              @unique @db.Uuid
   pantry_ingredient pantry_ingredient[]
-  recipe            recipe[]
   recipe_list       recipe_list[]
+  user_recipe       user_recipe[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -83,18 +83,15 @@ model product_label {
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model recipe {
   recipe_id         BigInt              @id @default(autoincrement())
-  user_id           BigInt
   title             String              @db.VarChar(255)
   instructions      String?
   image_url         String?
   yield_amount      Decimal?            @db.Decimal(10, 3)
   yield_unit        unit_code?
   created_at        DateTime            @default(now()) @db.Timestamptz(6)
-  app_user          app_user            @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_recipe_user")
   recipe_ingredient recipe_ingredient[]
   recipe_list_item  recipe_list_item[]
-
-  @@index([user_id], map: "idx_recipe_user")
+  user_recipe       user_recipe[]
 }
 
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
@@ -102,7 +99,7 @@ model recipe {
 model recipe_ingredient {
   recipe_id     BigInt
   ingredient_id BigInt
-  quantity      Decimal?   @db.Decimal(10, 3)
+  amount        Decimal?   @db.Decimal(10, 3)
   unit          unit_code
   ingredient    ingredient @relation(fields: [ingredient_id], references: [ingredient_id], onUpdate: NoAction, map: "fk_ri_ingredient")
   recipe        recipe     @relation(fields: [recipe_id], references: [recipe_id], onDelete: Cascade, onUpdate: NoAction, map: "fk_ri_recipe")
@@ -134,6 +131,16 @@ model recipe_list_item {
 
   @@id([list_id, recipe_id])
   @@index([recipe_id], map: "idx_recipe_list_item_recipe_id")
+}
+
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model user_recipe {
+  user_id   BigInt
+  recipe_id BigInt
+  recipe    recipe   @relation(fields: [recipe_id], references: [recipe_id], onDelete: NoAction, onUpdate: NoAction)
+  app_user  app_user @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([user_id, recipe_id])
 }
 
 enum unit_code {
