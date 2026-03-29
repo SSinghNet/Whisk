@@ -14,6 +14,16 @@ export async function getUserBySupabaseUid(supabaseUid) {
   })
 }
 
+export async function resolveUserId(supabaseUid) {
+  const user = await getUserBySupabaseUid(supabaseUid)
+  if (!user) {
+    const error = new Error("User not found")
+    error.status = 404
+    throw error
+  }
+  return user.user_id
+}
+
 export async function updateUser(supabaseUid, data) {
   return await prisma.app_user.update({
     where: { supabase_uid: supabaseUid },

@@ -1,7 +1,11 @@
 import prisma from "../lib/prisma.js"
 
-export const getIngredients = async () => {
-    return await prisma.ingredient.findMany({});
+export const getIngredients = async (search) => {
+    const where = search
+        ? { name: { contains: search, mode: 'insensitive' } }
+        : {}
+
+    return await prisma.ingredient.findMany({ where })
 }
 
 export const getIngredientById = async (id) => {

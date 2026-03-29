@@ -3,12 +3,12 @@ import {
     ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
-    StyleSheet,
     Text,
     TextInput,
-    TouchableOpacity,
     View,
 } from 'react-native';
+import AppButton from '../components/AppButton';
+import styles from '../styles/SignupScreen.styles';
 
 export default function SignupScreen({ onSignup, onSwitchToLogin, loading, error }) {
     const [name, setName] = useState('');
@@ -78,94 +78,24 @@ export default function SignupScreen({ onSignup, onSwitchToLogin, loading, error
 
                 {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-                <TouchableOpacity
-                    style={[styles.primaryButton, disableSubmit && styles.disabledButton]}
+                <AppButton
+                    title="Sign Up"
                     onPress={submitSignup}
+                    variant="primary"
                     disabled={disableSubmit}
-                >
-                    {loading ? (
-                        <ActivityIndicator color="#ffffff" />
-                    ) : (
-                        <Text style={styles.primaryButtonText}>Sign Up</Text>
-                    )}
-                </TouchableOpacity>
+                    loading={loading}
+                    style={{ marginTop: 4 }}
+                />
 
-                <TouchableOpacity style={styles.secondaryButton} onPress={onSwitchToLogin}>
-                    <Text style={styles.secondaryButtonText}>Already have an account? Login</Text>
-                </TouchableOpacity>
+                <AppButton
+                    title="Already have an account? Login"
+                    onPress={onSwitchToLogin}
+                    variant="secondary"
+                    style={styles.secondaryButton}
+                />
             </View>
         </KeyboardAvoidingView>
     );
 }
 
-const styles = StyleSheet.create({
-    screen: {
-        flex: 1,
-        backgroundColor: '#f6f7fb',
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingHorizontal: 20,
-    },
-    card: {
-        width: '100%',
-        maxWidth: 420,
-        backgroundColor: '#ffffff',
-        borderRadius: 14,
-        padding: 20,
-        shadowColor: '#000',
-        shadowOpacity: 0.08,
-        shadowRadius: 10,
-        shadowOffset: { width: 0, height: 4 },
-        elevation: 3,
-    },
-    title: {
-        fontSize: 28,
-        fontWeight: '700',
-        marginBottom: 6,
-    },
-    subtitle: {
-        fontSize: 15,
-        color: '#6b7280',
-        marginBottom: 18,
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#d1d5db',
-        borderRadius: 10,
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        fontSize: 15,
-        marginBottom: 12,
-        backgroundColor: '#ffffff',
-    },
-    primaryButton: {
-        backgroundColor: '#059669',
-        borderRadius: 10,
-        height: 44,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: 4,
-    },
-    disabledButton: {
-        opacity: 0.6,
-    },
-    primaryButtonText: {
-        color: '#ffffff',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    secondaryButton: {
-        marginTop: 14,
-        alignItems: 'center',
-    },
-    secondaryButtonText: {
-        color: '#2563eb',
-        fontSize: 14,
-        fontWeight: '500',
-    },
-    errorText: {
-        color: '#dc2626',
-        marginBottom: 8,
-        fontSize: 13,
-    },
-});
+

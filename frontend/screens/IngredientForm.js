@@ -1,19 +1,14 @@
 import { useState } from "react";
 import {
     View, Text, TextInput, TouchableOpacity,
-    StyleSheet, ActivityIndicator, KeyboardAvoidingView, Platform
+    ActivityIndicator, KeyboardAvoidingView, Platform
 } from "react-native";
-import Constants from 'expo-constants';
-
-const host = Constants.expoConfig?.hostUri?.split(":")[0] ?? "localhost";
-export const API_URL =
-  process.env.EXPO_PUBLIC_APP_ENV === "production"
-    ? "https://whisk-lznv.onrender.com"
-    : `http://${host}:3000`;
+import { createIngredient } from '../lib/api';
+import styles from '../styles/IngredientForm.styles';
 
 
 
-export default function IngredientForm({ onAdded }) {
+export default function IngredientForm({ session, onAdded }) {
     const [name, setName] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
@@ -23,15 +18,12 @@ export default function IngredientForm({ onAdded }) {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(`${API_URL}/ingredient`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: name.trim() }),
-            });
-            if (!res.ok) {
-                const data = await res.json();
-                throw new Error(data.message || "Failed to add ingredient");
+            const headers = { "Content-Type": "application/json" };
+            if (session?.access_token) {
+                headers.Authorization = `Bearer ${session.access_token}`;
             }
+
+            await createIngredient(session?.access_token, name);
             setName("");
             onAdded?.();
         } catch (e) {
@@ -49,6 +41,7 @@ export default function IngredientForm({ onAdded }) {
                     <TextInput
                         style={styles.input}
                         placeholder="e.g. Tomato"
+                        autoCapitalize="none"
                         value={name}
                         onChangeText={setName}
                         onSubmitEditing={handleAdd}
@@ -63,19 +56,3 @@ export default function IngredientForm({ onAdded }) {
         </KeyboardAvoidingView>
     );
 }
-
-const styles = StyleSheet.create({
-    container: { padding: 16 },
-    title: { fontSize: 20, fontWeight: "600", marginBottom: 12 },
-    row: { flexDirection: "row", gap: 8 },
-    input: {
-        flex: 1, borderWidth: 1, borderColor: "#ddd",
-        borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 16,
-    },
-    button: {
-        backgroundColor: "#2563eb", borderRadius: 8,
-        paddingHorizontal: 20, justifyContent: "center",
-    },
-    buttonText: { color: "#fff", fontWeight: "600", fontSize: 16 },
-    error: { color: "#dc2626", marginTop: 8, fontSize: 14 },
-});

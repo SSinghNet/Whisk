@@ -1,9 +1,10 @@
 import * as service from "../services/ingredientService.js"
 
 export const getIngredients = async (req, res) => {
-    const ingredients = await service.getIngredients()
+    const search = req.query.search || null
+    const ingredients = await service.getIngredients(search)
     if (!ingredients.length) {
-        return res.status(204).send()
+        return res.status(200).json([])
     }
 
     res.status(200).json(ingredients)
