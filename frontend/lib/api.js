@@ -1,0 +1,56 @@
+import Constants from 'expo-constants';
+
+const host = Constants.expoConfig?.hostUri?.split(':')[0] ?? 'localhost';
+export const API_URL =
+  process.env.EXPO_PUBLIC_APP_ENV === 'production'
+    ? 'https://whisk-lznv.onrender.com'
+    : `http://${host}:3000`;
+
+const handleResponse = async (res) => {
+  if (res.ok) return res.status === 204 ? null : res.json();
+  const text = await res.text();
+  try {
+    const json = JSON.parse(text);
+    throw new Error(json.message || text || 'API request failed');
+  } catch {
+    throw new Error(text || 'API request failed');
+  }
+};
+
+const buildHeaders = (token, contentType = true) => {
+  const headers = {};
+  if (contentType) headers['Content-Type'] = 'application/json';
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return headers;
+};
+
+const fetchJson = async (path, { method = 'GET', token, body } = {}) => {
+  const res = await fetch(`${API_URL}${path}`, {
+    method,
+    headers: buildHeaders(token, !!body),
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  return handleResponse(res);
+};
+
+export const getRecipes = (token) => fetchJson('/recipe', { token });
+export const createUserRecord = (token) => fetchJson('/users/register', { method: 'POST', token });
+
+export const getPantryItems = (token, query = '') =>
+  fetchJson(`/pantry${query ? `?search=${encodeURIComponent(query)}` : ''}`, { token });
+
+export const deletePantryItem = (token, id) => fetchJson(`/pantry/${id}`, { method: 'DELETE', token });
+
+export const updatePantryItem = (token, id, payload) =>
+  fetchJson(`/pantry/${id}`, { method: 'PATCH', token, body: payload });
+
+export const addPantryItem = (token, payload) => fetchJson('/pantry', { method: 'POST', token, body: payload });
+
+export const searchIngredients = (token, query = '') =>
+  fetchJson(`/ingredient${query ? `?search=${encodeURIComponent(query)}` : ''}`, { token });
+
+export const createIngredient = (token, name) => fetchJson('/ingredient', { method: 'POST', token, body: { name: name.trim() } });
+
+export const getIngredients = () => fetchJson('/ingredient');
+export const deleteIngredient = (id) => fetchJson(`/ingredient/${id}`, { method: 'DELETE' });
+export const updateIngredient = (id, name) => fetchJson(`/ingredient/${id}`, { method: 'PATCH', body: { name: name.trim() } });

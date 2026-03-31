@@ -8,7 +8,8 @@ import auth from './middleware/auth.js'
 import dbRoutes from './routes/dbRoutes.js'
 import recipeRoutes from './routes/recipeRoutes.js'
 import userRoutes from './routes/userRoutes.js'
-
+import ingredientRoutes from './routes/ingredientRoutes.js'
+import pantryRoutes from './routes/pantryRoutes.js'
 
 const app = express()
 
@@ -20,8 +21,12 @@ app.get('/', (_req, res) => {
 })
 
 app.use('/db', dbRoutes)
+
+app.use('/ingredient', auth, ingredientRoutes)
 app.use('/recipe', auth, recipeRoutes)
 app.use('/users', auth, userRoutes)
+app.use('/pantry', auth, pantryRoutes)
+
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(generateOpenAPIDocument()))
 
 app.use(errorHandler)

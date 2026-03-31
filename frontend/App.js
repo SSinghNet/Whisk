@@ -1,20 +1,17 @@
 import { useEffect, useState } from 'react';
 import {
     ActivityIndicator, FlatList, ScrollView, StatusBar,
-    StyleSheet, Text, TouchableOpacity, View
+    Text, TouchableOpacity, View, SafeAreaView
 } from 'react-native';
-import Constants from 'expo-constants';
+import IngredientForm from './screens/IngredientForm';
+import IngredientList from './screens/IngredientList';
+import PantryScreen from './screens/PantryScreen';
+import AddPantryIngredientScreen from './screens/AddPantryIngredientScreen';
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
 import { supabase } from './lib/supabase';
-
-const host = Constants.expoConfig?.hostUri?.split(":")[0] ?? "localhost";
-export const API_URL =
-  process.env.EXPO_PUBLIC_APP_ENV === "production"
-    ? "https://whisk-lznv.onrender.com"
-    : `http://${host}:3000`;
-
-
+import { getRecipes, createUserRecord } from './lib/api';
+import styles from './styles/App.styles';
 
 function RecipeList({ recipes, onSelect }) {
     return (
@@ -76,24 +73,31 @@ export default function App() {
     const [recipes, setRecipes] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [selected, setSelected] = useState(null);
+    const [selectedRecipe, setSelectedRecipe] = useState(null);
+    const [activeScreen, setActiveScreen] = useState('recipes');
 
     useEffect(() => {
-        if (!session) {
-            return;
-        }
+        if (!session || activeScreen !== 'recipes') return;
 
-        setLoading(true);
-        setError(null);
+        console.log(session.access_token)
+        const fetchRecipes = async () => {
+            setLoading(true);
+            setError(null);
 
-        fetch(`${API_URL}/recipe`, {
-            headers: { Authorization: `Bearer ${session.access_token}` },
-        })
-            .then(res => res.json())
-            .then(data => setRecipes(data))
-            .catch(err => setError(err.message))
-            .finally(() => setLoading(false));
-    }, [session]);
+            try {
+                const data = await getRecipes(session.access_token);
+                if (!Array.isArray(data)) throw new Error('Invalid recipes response');
+                setRecipes(data);
+            } catch (err) {
+                setError(err?.message || 'Failed to load recipes');
+                setRecipes([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        // fetchRecipes();
+    }, [session, activeScreen]);
 
     async function handleLogin(formData) {
         setAuthLoading(true);
@@ -135,10 +139,7 @@ export default function App() {
             return;
         }
 
-        await fetch(`${API_URL}/users/register`, {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${data.session.access_token}` },
-        });
+        await createUserRecord(data.session.access_token);
 
         setSession(data.session);
         setAuthLoading(false);
@@ -168,7 +169,7 @@ export default function App() {
         );
     }
 
-    if (loading) {
+    if (activeScreen === 'recipes' && loading) {
         return (
             <View style={styles.center}>
                 <ActivityIndicator size="large" />
@@ -176,7 +177,7 @@ export default function App() {
         );
     }
 
-    if (error) {
+    if (activeScreen === 'recipes' && error) {
         return (
             <View style={styles.center}>
                 <Text style={styles.error}>Error: {error}</Text>
@@ -188,114 +189,51 @@ export default function App() {
         await supabase.auth.signOut();
         setSession(null);
         setRecipes([]);
-        setSelected(null);
+        setSelectedRecipe(null);
+        setActiveScreen('recipes');
     }
 
     return (
-        <>
-            <StatusBar barStyle="dark-content" />
-            <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
-                <Text style={styles.logoutText}>Log out</Text>
-            </TouchableOpacity>
-            {selected
-                ? <RecipeDetail recipe={selected} onBack={() => setSelected(null)} />
-                : <RecipeList recipes={recipes} onSelect={setSelected} />
-            }
-        </>
+        <SafeAreaView style={styles.safeArea}>
+            <StatusBar barStyle='dark-content' />
+            <View style={styles.topNav}>
+                <TouchableOpacity onPress={() => setActiveScreen('recipes')} style={[styles.navButton, activeScreen === 'recipes' && styles.navActive]}>
+                    <Text style={styles.navText}>Recipes</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setActiveScreen('pantry')} style={[styles.navButton, activeScreen === 'pantry' && styles.navActive]}>
+                    <Text style={styles.navText}>Pantry</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
+                    <Text style={styles.logoutText}>Log out</Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* {activeScreen === 'recipes' && (
+                selectedRecipe
+                    ? <RecipeDetail recipe={selectedRecipe} onBack={() => setSelectedRecipe(null)} />
+                    : <RecipeList recipes={recipes} onSelect={setSelectedRecipe} />
+            )} */}
+
+            {activeScreen === 'pantry' && (
+                <PantryScreen
+                    session={session}
+                    onAdd={() => setActiveScreen('addPantry')}
+                    onBack={() => setActiveScreen('recipes')}
+                />
+            )}
+
+            {activeScreen === 'addPantry' && (
+                <AddPantryIngredientScreen
+                    session={session}
+                    onAdded={() => setActiveScreen('pantry')}
+                    onCancel={() => setActiveScreen('pantry')}
+                />
+            )}
+            {!['recipes','pantry','addPantry'].includes(activeScreen) && (
+                <View style={styles.center}><Text>Unknown screen: {activeScreen}</Text></View>
+            )}
+            </SafeAreaView>
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#fff',
-        paddingTop: 60,
-        paddingHorizontal: 16,
-    },
-    center: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    header: {
-        fontSize: 28,
-        fontWeight: '700',
-        marginBottom: 16,
-    },
-    card: {
-        backgroundColor: '#f5f5f5',
-        borderRadius: 10,
-        padding: 16,
-        marginBottom: 12,
-    },
-    cardTitle: {
-        fontSize: 18,
-        fontWeight: '600',
-        marginBottom: 4,
-    },
-    meta: {
-        fontSize: 13,
-        color: '#888',
-        marginBottom: 4,
-    },
-    ingredientPreview: {
-        fontSize: 14,
-        color: '#555',
-    },
-    backBtn: {
-        marginBottom: 12,
-    },
-    backText: {
-        fontSize: 16,
-        color: '#007AFF',
-    },
-    sectionLabel: {
-        fontSize: 18,
-        fontWeight: '600',
-        marginTop: 16,
-        marginBottom: 10,
-    },
-    ingredientRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingVertical: 8,
-        borderBottomWidth: 1,
-        borderBottomColor: '#eee',
-    },
-    ingredientName: {
-        fontSize: 15,
-        color: '#222',
-        textTransform: 'capitalize',
-    },
-    ingredientAmount: {
-        fontSize: 15,
-        color: '#555',
-    },
-    instructions: {
-        fontSize: 15,
-        color: '#333',
-        lineHeight: 24,
-        marginTop: 4,
-        marginBottom: 40,
-    },
-    error: {
-        color: 'red',
-        fontSize: 14,
-    },
-    empty: {
-        textAlign: 'center',
-        color: '#aaa',
-        marginTop: 40,
-    },
-    logoutBtn: {
-        position: 'absolute',
-        top: 16,
-        right: 16,
-        zIndex: 10,
-    },
-    logoutText: {
-        color: '#dc2626',
-        fontSize: 14,
-        fontWeight: '500',
-    },
-});
+
