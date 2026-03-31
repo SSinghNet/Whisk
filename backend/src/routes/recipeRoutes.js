@@ -15,9 +15,6 @@ router.get('/', getRecipes);
 // GET /recipes/:id
 router.get('/:id', getRecipe);
 
-<<<<<<< HEAD
-export default router;
-=======
 // POST /recipes
 router.post('/', createRecipe);
 
@@ -28,4 +25,3 @@ router.put('/:id', updateRecipe);
 router.delete('/:id', deleteRecipe);
 
 export default router;
->>>>>>> dd4ffd9 (recipe endpoints)
