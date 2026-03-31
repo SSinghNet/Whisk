@@ -54,6 +54,7 @@ export default function BarcodeScannerScreen({ session, onDone }) {
             const result = await lookupBarcode(session.access_token, data);
             setProduct(result);
             setUnit(result.default_unit ?? 'count');
+            setQuantity(String(result.default_quantity ?? 1));
         } catch (err) {
             if (err.message?.includes('not found') || err.message?.includes('404')) {
                 setNotFound(true);

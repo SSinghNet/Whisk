@@ -21,12 +21,13 @@ export async function lookupBarcode(req, res, next) {
         }
 
         res.json({
-            barcode:        product.barcode,
-            product_name:   product.product_name,
-            brand:          product.brand,
-            ingredient_id:  product.ingredient.ingredient_id,
-            ingredient_name: product.ingredient.name,
-            default_unit:   product.default_unit,
+            barcode:          product.barcode,
+            product_name:     product.product_name,
+            brand:            product.brand,
+            ingredient_id:    product.ingredient.ingredient_id,
+            ingredient_name:  product.ingredient.name,
+            default_unit:     product.default_unit,
+            default_quantity: product.default_quantity != null ? Number(product.default_quantity) : 1,
         })
     } catch (err) {
         next(err)
