@@ -1,2 +1,4 @@
 import './shared.schema.js'
 import './user.schema.js'
+import './ingredient.schema.js'
+import './pantry.schema.js'
