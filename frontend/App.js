@@ -4,7 +4,6 @@ import {
     Text, TouchableOpacity, View, SafeAreaView
 } from 'react-native';
 import IngredientForm from './screens/IngredientForm';
-import IngredientList from './screens/IngredientList';
 import PantryScreen from './screens/PantryScreen';
 import AddPantryIngredientScreen from './screens/AddPantryIngredientScreen';
 import LoginScreen from './screens/LoginScreen';
@@ -74,7 +73,8 @@ export default function App() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [selectedRecipe, setSelectedRecipe] = useState(null);
-    const [activeScreen, setActiveScreen] = useState('recipes');
+    const [activeScreen, setActiveScreen] = useState('pantry');
+    const [addIngredient, setAddIngredient] = useState(null);
 
     useEffect(() => {
         if (!session || activeScreen !== 'recipes') return;
@@ -190,7 +190,7 @@ export default function App() {
         setSession(null);
         setRecipes([]);
         setSelectedRecipe(null);
-        setActiveScreen('recipes');
+        setActiveScreen('pantry');
     }
 
     return (
@@ -203,7 +203,7 @@ export default function App() {
                 <TouchableOpacity onPress={() => setActiveScreen('pantry')} style={[styles.navButton, activeScreen === 'pantry' && styles.navActive]}>
                     <Text style={styles.navText}>Pantry</Text>
                 </TouchableOpacity>
-                <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
+<TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
                     <Text style={styles.logoutText}>Log out</Text>
                 </TouchableOpacity>
             </View>
@@ -222,14 +222,15 @@ export default function App() {
                 />
             )}
 
-            {activeScreen === 'addPantry' && (
+{activeScreen === 'addPantry' && (
                 <AddPantryIngredientScreen
                     session={session}
-                    onAdded={() => setActiveScreen('pantry')}
-                    onCancel={() => setActiveScreen('pantry')}
+                    initialIngredient={addIngredient}
+                    onAdded={() => { setAddIngredient(null); setActiveScreen('pantry'); }}
+                    onCancel={() => { setAddIngredient(null); setActiveScreen('pantry'); }}
                 />
             )}
-            {!['recipes','pantry','addPantry'].includes(activeScreen) && (
+            {!['recipes','pantry','ingredients','addPantry'].includes(activeScreen) && (
                 <View style={styles.center}><Text>Unknown screen: {activeScreen}</Text></View>
             )}
             </SafeAreaView>

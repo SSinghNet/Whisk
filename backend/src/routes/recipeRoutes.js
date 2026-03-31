@@ -7,5 +7,3 @@ router.get('/', getRecipes);
 router.get('/:id', getRecipe);
 
 export default router;
-
-

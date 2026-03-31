@@ -51,6 +51,6 @@ export const searchIngredients = (token, query = '') =>
 
 export const createIngredient = (token, name) => fetchJson('/ingredient', { method: 'POST', token, body: { name: name.trim() } });
 
-export const getIngredients = () => fetchJson('/ingredient');
-export const deleteIngredient = (id) => fetchJson(`/ingredient/${id}`, { method: 'DELETE' });
-export const updateIngredient = (id, name) => fetchJson(`/ingredient/${id}`, { method: 'PATCH', body: { name: name.trim() } });
+export const getIngredients = (token) => fetchJson('/ingredient', { token });
+export const deleteIngredient = (token, id) => fetchJson(`/ingredient/${id}`, { method: 'DELETE', token });
+export const updateIngredient = (token, id, name) => fetchJson(`/ingredient/${id}`, { method: 'PATCH', token, body: { name: name.trim() } });

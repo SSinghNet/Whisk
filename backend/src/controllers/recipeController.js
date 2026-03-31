@@ -22,6 +22,7 @@ const RECIPE_WITH_INGREDIENTS = `
             '[]'
         ) AS ingredients
     FROM recipe r
+    JOIN user_recipe ur ON r.recipe_id = ur.recipe_id
     LEFT JOIN recipe_ingredient ri ON r.recipe_id = ri.recipe_id
     LEFT JOIN ingredient i ON ri.ingredient_id = i.ingredient_id
 `;
@@ -30,7 +31,7 @@ export const getRecipes = async (req, res, next) => {
     try {
         const { rows } = await pool.query(
             RECIPE_WITH_INGREDIENTS +
-            ` WHERE r.user_id = (SELECT user_id FROM app_user WHERE supabase_uid = $1)
+            ` WHERE ur.user_id = (SELECT user_id FROM app_user WHERE supabase_uid = $1)
              GROUP BY r.recipe_id ORDER BY r.created_at DESC`,
             [req.user.id]
         );
@@ -47,7 +48,7 @@ export const getRecipe = async (req, res, next) => {
         const { rows } = await pool.query(
             RECIPE_WITH_INGREDIENTS +
             ` WHERE r.recipe_id = $1
-              AND r.user_id = (SELECT user_id FROM app_user WHERE supabase_uid = $2)
+              AND ur.user_id = (SELECT user_id FROM app_user WHERE supabase_uid = $2)
              GROUP BY r.recipe_id`,
             [id, req.user.id]
         );

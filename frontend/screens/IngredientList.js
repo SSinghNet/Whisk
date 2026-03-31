@@ -6,7 +6,7 @@ import {
 import IngredientCard from '../components/IngredientCard';
 import { getIngredients, deleteIngredient, updateIngredient } from '../lib/api';
 import styles from '../styles/IngredientList.styles';
-export default function IngredientList() {
+export default function IngredientList({ session, onAdd }) {
   const [ingredients, setIngredients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -17,7 +17,7 @@ export default function IngredientList() {
     setLoading(true);
     setError(null);
     try {
-      const data = await getIngredients();
+      const data = await getIngredients(session?.access_token);
       setIngredients(data);
     } catch (e) {
       setError(e.message);
@@ -32,7 +32,7 @@ export default function IngredientList() {
       {
         text: "Delete", style: "destructive", onPress: async () => {
           try {
-            await deleteIngredient(id);
+            await deleteIngredient(session?.access_token, id);
             await fetchIngredients();
           } catch {
             Alert.alert("Error", "Failed to delete ingredient");
@@ -45,7 +45,7 @@ export default function IngredientList() {
   const handleEditSave = async (id) => {
     if (!editingName.trim()) return;
     try {
-      await updateIngredient(id, editingName);
+      await updateIngredient(session?.access_token, id, editingName);
       setEditingId(null);
       setEditingName("");
       await fetchIngredients();
@@ -98,6 +98,7 @@ export default function IngredientList() {
             <IngredientCard
               title={item.name}
               actions={[
+                { label: 'Add', onPress: () => onAdd?.(item), variant: 'primary' },
                 { label: 'Edit', onPress: () => handleEditStart(item), variant: 'primary' },
                 { label: 'Delete', onPress: () => handleDelete(item.ingredient_id), variant: 'danger' },
               ]}

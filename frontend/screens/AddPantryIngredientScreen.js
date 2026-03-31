@@ -12,12 +12,12 @@ const UNIT_OPTIONS = [
   'count', 'gram', 'ounce', 'pound', 'milliliter', 'liter', 'gallon', 'cup', 'tablespoon', 'teaspoon'
 ];
 
-export default function AddPantryIngredientScreen({ session, onAdded, onCancel }) {
+export default function AddPantryIngredientScreen({ session, onAdded, onCancel, initialIngredient }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState(initialIngredient ?? null);
   const [quantity, setQuantity] = useState('');
   const [unit, setUnit] = useState('count');
   const [expiry_date, setExpiryDate] = useState('');
@@ -37,11 +37,7 @@ export default function AddPantryIngredientScreen({ session, onAdded, onCancel }
   };
 
   useEffect(() => {
-    if (query.length >= 2) {
-      runSearch(query);
-    } else {
-      setResults([]);
-    }
+    runSearch(query);
   }, [query]);
 
   const handleAddToPantry = async () => {
