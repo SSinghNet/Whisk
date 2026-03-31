@@ -46,7 +46,7 @@ export default function PantryScreen({ session, onAdd }) {
         text: 'Delete', style: 'destructive', onPress: async () => {
           try {
             await deletePantryItem(session.access_token, ingredientId);
-            await fetchPantry(search);
+            await fetchPantry(search, { quietSearch: true });
           } catch (e) {
             Alert.alert('Error', e.message || 'Delete failed');
           }
@@ -85,7 +85,7 @@ export default function PantryScreen({ session, onAdd }) {
 
       await updatePantryItem(session.access_token, ingredientId, payload);
       cancelEdit();
-      await fetchPantry(search);
+      await fetchPantry(search, { quietSearch: true });
     } catch (e) {
       Alert.alert('Error', e.message || 'Update failed');
     }
