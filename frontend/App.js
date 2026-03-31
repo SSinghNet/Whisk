@@ -4,6 +4,7 @@ import {
     Text, TouchableOpacity, View, SafeAreaView
 } from 'react-native';
 import IngredientForm from './screens/IngredientForm';
+import BarcodeScannerScreen from './screens/BarcodeScannerScreen';
 import PantryScreen from './screens/PantryScreen';
 import AddPantryIngredientScreen from './screens/AddPantryIngredientScreen';
 import LoginScreen from './screens/LoginScreen';
@@ -203,7 +204,10 @@ export default function App() {
                 <TouchableOpacity onPress={() => setActiveScreen('pantry')} style={[styles.navButton, activeScreen === 'pantry' && styles.navActive]}>
                     <Text style={styles.navText}>Pantry</Text>
                 </TouchableOpacity>
-<TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
+                <TouchableOpacity onPress={() => setActiveScreen('scan')} style={[styles.navButton, activeScreen === 'scan' && styles.navActive]}>
+                    <Text style={styles.navText}>Scan</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
                     <Text style={styles.logoutText}>Log out</Text>
                 </TouchableOpacity>
             </View>
@@ -230,7 +234,14 @@ export default function App() {
                     onCancel={() => { setAddIngredient(null); setActiveScreen('pantry'); }}
                 />
             )}
-            {!['recipes','pantry','ingredients','addPantry'].includes(activeScreen) && (
+            {activeScreen === 'scan' && (
+                <BarcodeScannerScreen
+                    session={session}
+                    onDone={() => setActiveScreen('pantry')}
+                />
+            )}
+
+            {!['recipes','pantry','ingredients','addPantry','scan'].includes(activeScreen) && (
                 <View style={styles.center}><Text>Unknown screen: {activeScreen}</Text></View>
             )}
             </SafeAreaView>
