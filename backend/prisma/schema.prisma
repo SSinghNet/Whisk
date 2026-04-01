@@ -54,16 +54,16 @@ model pantry_ingredient {
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model product {
-  product_id    BigInt          @id @default(autoincrement())
-  barcode       String          @unique @db.VarChar(14)
-  product_name  String?         @db.VarChar(512)
-  brand         String?         @db.VarChar(255)
-  ingredient_id BigInt
+  product_id       BigInt          @id @default(autoincrement())
+  barcode          String          @unique @db.VarChar(14)
+  product_name     String?         @db.VarChar(512)
+  brand            String?         @db.VarChar(255)
+  ingredient_id    BigInt
   default_unit     unit_code       @default(count)
-  default_quantity Decimal?        @db.Decimal(10, 3)
   created_at       DateTime        @default(now()) @db.Timestamptz(6)
-  ingredient    ingredient      @relation(fields: [ingredient_id], references: [ingredient_id], onUpdate: NoAction, map: "fk_product_ingredient")
-  product_label product_label[]
+  default_quantity Decimal?        @db.Decimal(10, 3)
+  ingredient       ingredient      @relation(fields: [ingredient_id], references: [ingredient_id], onUpdate: NoAction, map: "fk_product_ingredient")
+  product_label    product_label[]
 
   @@index([ingredient_id], map: "idx_product_ingredient")
   @@index([product_name], map: "idx_product_name")
