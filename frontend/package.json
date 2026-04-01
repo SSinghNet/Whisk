@@ -8,7 +8,10 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "prod:android": "EXPO_PUBLIC_APP_ENV=production expo start --android",
-    "prod:ios": "EXPO_PUBLIC_APP_ENV=production expo start --ios"
+    "prod:ios": "EXPO_PUBLIC_APP_ENV=production expo start --ios",
+    "build:android": "eas build --platform android --profile preview",
+    "build:ios": "eas build --platform ios --profile preview",
+    "build:all": "eas build --platform all --profile preview"
   },
   "dependencies": {
     "@react-native-picker/picker": "^2.11.4",

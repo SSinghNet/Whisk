@@ -97,7 +97,7 @@ export default function App() {
             }
         };
 
-        // fetchRecipes();
+        fetchRecipes();
     }, [session, activeScreen]);
 
     async function handleLogin(formData) {
@@ -212,11 +212,11 @@ export default function App() {
                 </TouchableOpacity>
             </View>
 
-            {/* {activeScreen === 'recipes' && (
+            {activeScreen === 'recipes' && (
                 selectedRecipe
                     ? <RecipeDetail recipe={selectedRecipe} onBack={() => setSelectedRecipe(null)} />
                     : <RecipeList recipes={recipes} onSelect={setSelectedRecipe} />
-            )} */}
+            )}
 
             {activeScreen === 'pantry' && (
                 <PantryScreen
