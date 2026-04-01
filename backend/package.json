@@ -6,11 +6,17 @@
     "author": "",
     "type": "module",
     "main": "server.js",
+
     "scripts": {
         "start": "node server.js",
         "dev": "nodemon server.js",
         "test": "echo \"Error: no test specified\" && exit 1",
-        "db:pull": "prisma db pull && prisma generate"
+        "db:pull": "prisma db pull && prisma generate",
+        "build:macos-arm64": "bun build ./server.js --compile --target=bun-macos-arm64 --outfile=dist/whisk-backend-macos-arm64",
+        "build:macos-x64": "bun build ./server.js --compile --target=bun-macos-x64 --outfile=dist/whisk-backend-macos-x64",
+        "build:windows-x64": "bun build ./server.js --compile --target=bun-windows-x64 --outfile=dist/whisk-backend-windows-x64",
+        "build:linux-x64": "bun build ./server.js --compile --target=bun-linux-x64 --outfile=dist/whisk-backend-linux-x64",
+        "build:all": "npm run build:macos-arm64 && npm run build:macos-x64 && npm run build:windows-x64 && npm run build:linux-x64"
     },
     "dependencies": {
         "@asteasolutions/zod-to-openapi": "^8.4.3",
