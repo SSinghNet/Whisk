@@ -1,12 +1,12 @@
 import request from 'supertest';
-import app from '../src/app.js';
-import prisma from '../src/lib/prisma.js';
-import { loginTestUser } from './helpers/auth.js';
+import app from '../../src/app.js';
+import prisma from '../../src/lib/prisma.js';
+import { loginTestUser } from './../helpers/auth.js';
 import {
   createTestIngredient,
   deleteIngredient,
   deletePantryItem,
-} from './helpers/db.js';
+} from './../helpers/db.js';
 
 describe('Pantry routes', () => {
   let token;

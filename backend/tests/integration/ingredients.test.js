@@ -1,7 +1,7 @@
 import request from 'supertest';
-import app from '../src/app.js';
-import prisma from '../src/lib/prisma.js';
-import { loginTestUser } from './helpers/auth.js';
+import app from '../../src/app.js';
+import prisma from '../../src/lib/prisma.js';
+import { loginTestUser } from './../helpers/auth.js';
 
 describe('Ingredient routes', () => {
   let token;
