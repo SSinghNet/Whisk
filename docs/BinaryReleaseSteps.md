@@ -1,6 +1,6 @@
 # Whisk — Install from Release
 
-> **Download:** [Whisk Beta Release](#) *(insert release link here)*  
+> **Download:** [Whisk Beta Release](https://github.com/SSinghNet/Whisk/releases/tag/beta) *(https://github.com/SSinghNet/Whisk/releases/tag/beta)*  
 
 ---
 
@@ -56,4 +56,4 @@ adb install -r [apk-file].apk
 
 ## Step 4 — Launch Whisk
 
-Open the Android emulator and launch the **Whisk** app. The app will connect to your locally running backend.
+Open the Android emulator and launch the **Whisk** app. 

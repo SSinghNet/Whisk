@@ -94,6 +94,10 @@ eas login
 
 > **Tip:** Use `eas login -b` to log in through the browser instead.
 
+> **Important:** In your Expo project settings on the expo.dev dashboard, set these environment variables under the “Environment Variables” section (or in your EAS secrets) before building:
+> - `EXPO_PUBLIC_SUPABASE_URL`
+> - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
+
 ### 3.3 Build for Android
 
 ```bash

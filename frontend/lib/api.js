@@ -1,6 +1,7 @@
 import Constants from 'expo-constants';
 
-const host = Constants.expoConfig?.hostUri?.split(':')[0] ?? 'localhost';
+const host = Constants.expoConfig?.hostUri?.split(':')[0] ?? '10.0.2.2';
+console.log(host);
 export const API_URL =
   process.env.EXPO_PUBLIC_APP_ENV === 'production'
     ? 'https://whisk-lznv.onrender.com'
