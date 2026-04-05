@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
 import {
-  View, Text, TextInput, FlatList, TouchableOpacity,
-  ActivityIndicator, Alert
+  View, Text, FlatList, TouchableOpacity,
+  ActivityIndicator, Alert,
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../styles/colors';
 import { searchIngredients, addPantryItem } from '../lib/api';
+import SearchBar from '../components/SearchBar';
 import IngredientForm from './IngredientForm';
 import IngredientCard from '../components/IngredientCard';
+import PantryItemQuantityPopup from '../components/PantryItemQuantityPopup';
 import styles from '../styles/AddPantryIngredientScreen.styles';
-const UNIT_OPTIONS = [
-  'count', 'gram', 'ounce', 'pound', 'milliliter', 'liter', 'gallon', 'cup', 'tablespoon', 'teaspoon'
-];
 
 export default function AddPantryIngredientScreen({ session, onAdded, onCancel, initialIngredient }) {
   const [query, setQuery] = useState('');
@@ -20,7 +20,7 @@ export default function AddPantryIngredientScreen({ session, onAdded, onCancel, 
   const [selected, setSelected] = useState(initialIngredient ?? null);
   const [quantity, setQuantity] = useState('');
   const [unit, setUnit] = useState('count');
-  const [expiry_date, setExpiryDate] = useState('');
+  const [expiry_date, setExpiryDate] = useState(new Date());
   const [createPopup, setCreatePopup] = useState(false);
 
   const runSearch = async (q) => {
@@ -56,7 +56,7 @@ export default function AddPantryIngredientScreen({ session, onAdded, onCancel, 
         ingredient_id: selected.ingredient_id,
         quantity: Number(quantity),
         unit,
-        expiry_date: expiry_date || null,
+        expiry_date: expiry_date.toISOString().split('T')[0] || null,
       });
       onAdded && onAdded();
     } catch (e) {
@@ -79,12 +79,17 @@ export default function AddPantryIngredientScreen({ session, onAdded, onCancel, 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Add Pantry Item</Text>
-      <TouchableOpacity onPress={onCancel}><Text style={styles.back}>← Back</Text></TouchableOpacity>
+      <TouchableOpacity
+        onPress={onCancel}
+        style={styles.backRow}
+        accessibilityRole="button"
+        accessibilityLabel="Go back"
+      >
+        <Ionicons name="chevron-back" size={22} color={COLORS.primary} />
+      </TouchableOpacity>
 
-      <TextInput
-        style={styles.searchInput}
+      <SearchBar
         placeholder="Search ingredient (min 2 chars)"
-        autoCapitalize="none"
         value={query}
         onChangeText={setQuery}
       />
@@ -93,9 +98,11 @@ export default function AddPantryIngredientScreen({ session, onAdded, onCancel, 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
       <FlatList
+        style={styles.resultsList}
         data={results}
         keyExtractor={(item) => String(item.ingredient_id)}
         ListEmptyComponent={<Text style={styles.empty}>No results</Text>}
+        keyboardShouldPersistTaps="handled"
         renderItem={({ item }) => (
           <IngredientCard
             title={item.name}
@@ -105,8 +112,13 @@ export default function AddPantryIngredientScreen({ session, onAdded, onCancel, 
         )}
       />
 
-      <TouchableOpacity onPress={() => setCreatePopup(true)} style={styles.popupButton}>
-        <Text style={styles.popupButtonText}>Create New Ingredient</Text>
+      <TouchableOpacity
+        onPress={() => setCreatePopup(true)}
+        style={styles.popupButton}
+        accessibilityRole="button"
+        accessibilityLabel="Create new ingredient"
+      >
+        <Ionicons name="create-outline" size={26} color={COLORS.buttonText} />
       </TouchableOpacity>
 
       {createPopup && (
@@ -117,42 +129,32 @@ export default function AddPantryIngredientScreen({ session, onAdded, onCancel, 
               setCreatePopup(false);
               handleIngredientCreated();
             }} />
-            <TouchableOpacity onPress={() => setCreatePopup(false)} style={styles.popupClose}>
-              <Text style={styles.popupCloseText}>Close</Text>
+            <TouchableOpacity
+              onPress={() => setCreatePopup(false)}
+              style={styles.popupClose}
+              accessibilityRole="button"
+              accessibilityLabel="Close"
+            >
+              <Ionicons name="close-circle-outline" size={28} color={COLORS.primary} />
             </TouchableOpacity>
           </View>
         </View>
       )}
 
       {selected && (
-        <View style={styles.selectedBlock}>
-          <Text style={styles.section}>Selected: {selected.name}</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Quantity"
-            autoCapitalize="none"
-            keyboardType="numeric"
-            value={quantity}
-            onChangeText={setQuantity}
-          />
-          <Picker
-            selectedValue={unit}
-            onValueChange={(value) => setUnit(value)}
-            style={styles.picker}
-          >
-            {UNIT_OPTIONS.map((u) => <Picker.Item key={u} label={u} value={u} />)}
-          </Picker>
-          <TextInput
-            style={styles.input}
-            placeholder="Expiry date (YYYY-MM-DD)"
-            autoCapitalize="none"
-            value={expiry_date}
-            onChangeText={setExpiryDate}
-          />
-          <TouchableOpacity style={styles.addButton} onPress={handleAddToPantry}>
-            <Text style={styles.addButtonText}>Add to Pantry</Text>
-          </TouchableOpacity>
-        </View>
+        <PantryItemQuantityPopup
+          title={`Add ${selected.name} to Pantry`}
+          quantity={quantity}
+          onQuantityChange={setQuantity}
+          unit={unit}
+          onUnitChange={setUnit}
+          expiryDate={expiry_date}
+          onExpiryDateChange={setExpiryDate}
+          primaryLabel="Add to Pantry"
+          primaryIcon="bag-add-outline"
+          onPrimary={handleAddToPantry}
+          onCancel={() => setSelected(null)}
+        />
       )}
     </View>
   );

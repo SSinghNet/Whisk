@@ -12,7 +12,7 @@ function iconTint(variant) {
   return COLORS.primary;
 }
 
-export default function IngredientCard({
+export default function RecipeCard({
   title,
   details = [],
   selected = false,

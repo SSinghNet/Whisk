@@ -3,6 +3,8 @@ import {
   View, Text, FlatList, TouchableOpacity,
   ActivityIndicator, Alert, TextInput
 } from "react-native";
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../styles/colors';
 import IngredientCard from '../components/IngredientCard';
 import { getIngredients, deleteIngredient, updateIngredient } from '../lib/api';
 import styles from '../styles/IngredientList.styles';
@@ -86,11 +88,21 @@ export default function IngredientList({ session, onAdd }) {
                 autoFocus
               />
               <View style={styles.actions}>
-                <TouchableOpacity onPress={() => handleEditSave(item.ingredient_id)}>
-                  <Text style={styles.save}>Save</Text>
+                <TouchableOpacity
+                  onPress={() => handleEditSave(item.ingredient_id)}
+                  style={styles.iconAction}
+                  accessibilityRole="button"
+                  accessibilityLabel="Save"
+                >
+                  <Ionicons name="checkmark-circle" size={28} color={COLORS.success} />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={handleEditCancel}>
-                  <Text style={styles.cancel}>Cancel</Text>
+                <TouchableOpacity
+                  onPress={handleEditCancel}
+                  style={styles.iconAction}
+                  accessibilityRole="button"
+                  accessibilityLabel="Cancel"
+                >
+                  <Ionicons name="close-circle-outline" size={28} color={COLORS.textSecondary} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -98,9 +110,9 @@ export default function IngredientList({ session, onAdd }) {
             <IngredientCard
               title={item.name}
               actions={[
-                { label: 'Add', onPress: () => onAdd?.(item), variant: 'primary' },
-                { label: 'Edit', onPress: () => handleEditStart(item), variant: 'primary' },
-                { label: 'Delete', onPress: () => handleDelete(item.ingredient_id), variant: 'danger' },
+                { icon: 'add-circle', accessibilityLabel: 'Add to pantry', onPress: () => onAdd?.(item), variant: 'primary' },
+                { icon: 'create-outline', accessibilityLabel: 'Edit', onPress: () => handleEditStart(item), variant: 'primary' },
+                { icon: 'trash-outline', accessibilityLabel: 'Delete', onPress: () => handleDelete(item.ingredient_id), variant: 'danger' },
               ]}
               style={styles.item}
             />

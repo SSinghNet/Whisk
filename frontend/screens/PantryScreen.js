@@ -1,16 +1,23 @@
 import { useEffect, useState } from 'react';
 import {
-  View, Text, TextInput, FlatList,
+  View, Text, FlatList,
   ActivityIndicator, Alert, TouchableOpacity
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../styles/colors';
 import IngredientCard from '../components/IngredientCard';
+import SearchBar from '../components/SearchBar';
+import PantryItemQuantityPopup from '../components/PantryItemQuantityPopup';
 import { getPantryItems, deletePantryItem, updatePantryItem } from '../lib/api';
 import styles from '../styles/PantryScreen.styles';
 
-const UNIT_OPTIONS = [
-  'count', 'gram', 'ounce', 'pound', 'milliliter', 'liter', 'gallon', 'cup', 'tablespoon', 'teaspoon'
-];
+function parsePantryExpiry(iso) {
+  if (!iso) return new Date();
+  const part = String(iso).split('T')[0];
+  const [y, m, d] = part.split('-').map(Number);
+  if (!y || !m || !d) return new Date();
+  return new Date(y, m - 1, d);
+}
 
 export default function PantryScreen({ session, onAdd }) {
   const [pantry, setPantry] = useState([]);
@@ -18,8 +25,10 @@ export default function PantryScreen({ session, onAdd }) {
   const [searchLoading, setSearchLoading] = useState(false);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
-  const [editingId, setEditingId] = useState(null);
-  const [editValues, setEditValues] = useState({ quantity: '', unit: 'count', expiry_date: '' });
+  const [editingItem, setEditingItem] = useState(null);
+  const [editQuantity, setEditQuantity] = useState('');
+  const [editUnit, setEditUnit] = useState('count');
+  const [editExpiryDate, setEditExpiryDate] = useState(new Date());
 
   const fetchPantry = async (q = '', { quietSearch = false } = {}) => {
     const busySetter = quietSearch ? setSearchLoading : setLoading;
@@ -56,34 +65,35 @@ export default function PantryScreen({ session, onAdd }) {
   };
 
   const startEdit = (item) => {
-    setEditingId(item.ingredient_id);
-    setEditValues({
-      quantity: item.quantity?.toString() ?? '',
-      unit: item.unit ?? '',
-      expiry_date: item.expiry_date ? item.expiry_date.split('T')[0] : '',
-    });
+    setEditingItem(item);
+    setEditQuantity(item.quantity?.toString() ?? '');
+    setEditUnit(item.unit || 'count');
+    setEditExpiryDate(parsePantryExpiry(item.expiry_date));
   };
 
   const cancelEdit = () => {
-    setEditingId(null);
-    setEditValues({ quantity: '', unit: '', expiry_date: '' });
+    setEditingItem(null);
+    setEditQuantity('');
+    setEditUnit('count');
+    setEditExpiryDate(new Date());
   };
 
-  const saveEdit = async (ingredientId) => {
+  const saveEdit = async () => {
+    if (!editingItem) return;
+    const quantityValue = Number(editQuantity);
+    if (Number.isNaN(quantityValue) || quantityValue < 1) {
+      Alert.alert('Validation', 'Quantity must be a number greater than 0');
+      return;
+    }
+
+    const payload = {
+      quantity: quantityValue,
+      unit: editUnit,
+      expiry_date: editExpiryDate.toISOString().split('T')[0],
+    };
+
     try {
-      const quantityValue = Number(editValues.quantity);
-      if (Number.isNaN(quantityValue) || quantityValue <= 1) {
-        Alert.alert('Validation', 'Quantity must be a number greater than 1');
-        return;
-      }
-
-      const payload = {
-        quantity: quantityValue,
-        unit: editValues.unit,
-      };
-      if (editValues.expiry_date !== '') payload.expiry_date = editValues.expiry_date;
-
-      await updatePantryItem(session.access_token, ingredientId, payload);
+      await updatePantryItem(session.access_token, editingItem.ingredient_id, payload);
       cancelEdit();
       await fetchPantry(search, { quietSearch: true });
     } catch (e) {
@@ -100,10 +110,8 @@ export default function PantryScreen({ session, onAdd }) {
         <Text style={styles.title}>Pantry</Text>
       </View>
 
-      <TextInput
-        style={styles.searchInput}
+      <SearchBar
         placeholder="Search pantry..."
-        autoCapitalize="none"
         value={search}
         onChangeText={(text) => {
           setSearch(text);
@@ -116,59 +124,49 @@ export default function PantryScreen({ session, onAdd }) {
       )}
 
       <FlatList
+        style={styles.list}
         data={pantry}
         keyExtractor={(item) => `${item.user_id}-${item.ingredient_id}`}
         ListEmptyComponent={<Text style={styles.empty}>No pantry items found.</Text>}
+        keyboardShouldPersistTaps="handled"
         renderItem={({ item }) => (
-          editingId === item.ingredient_id ? (
-            <View style={styles.editPane}>
-              <TextInput
-                style={styles.smallInput}
-                placeholder="quantity"
-                autoCapitalize="none"
-                keyboardType="numeric"
-                value={String(editValues.quantity)}
-                onChangeText={(value) => setEditValues(prev => ({ ...prev, quantity: value }))}
-              />
-              <Picker
-                selectedValue={editValues.unit}
-                onValueChange={(value) => setEditValues(prev => ({ ...prev, unit: value }))}
-                style={styles.picker}
-              >
-                {UNIT_OPTIONS.map((unit) => (
-                  <Picker.Item key={unit} label={unit} value={unit} />
-                ))}
-              </Picker>
-              <TextInput
-                style={styles.smallInput}
-                placeholder="expiry YYYY-MM-DD"
-                autoCapitalize="none"
-                value={editValues.expiry_date}
-                onChangeText={(value) => setEditValues(prev => ({ ...prev, expiry_date: value }))}
-              />
-              <View style={styles.actions}>
-                <TouchableOpacity onPress={() => saveEdit(item.ingredient_id)}><Text style={styles.save}>Save</Text></TouchableOpacity>
-                <TouchableOpacity onPress={cancelEdit}><Text style={styles.cancel}>Cancel</Text></TouchableOpacity>
-              </View>
-            </View>
-          ) : (
-            <IngredientCard
-              title={item.ingredient?.name ?? 'Unknown ingredient'}
-              details={[
-                `quantity: ${item.quantity ?? '-'} ${item.unit ?? '-'}`,
-                `expiry: ${item.expiry_date ? item.expiry_date.split('T')[0] : 'none'}`,
-              ]}
-              actions={[
-                { label: 'Edit', onPress: () => startEdit(item), variant: 'primary' },
-                { label: 'Delete', onPress: () => handleDelete(item.ingredient_id), variant: 'danger' },
-              ]}
-            />
-          )
+          <IngredientCard
+            title={item.ingredient?.name ?? 'Unknown ingredient'}
+            details={[
+              `quantity: ${item.quantity ?? '-'} ${item.unit ?? '-'}`,
+              `expiry: ${item.expiry_date ? item.expiry_date.split('T')[0] : 'none'}`,
+            ]}
+            actions={[
+              { icon: 'create-outline', accessibilityLabel: 'Edit', onPress: () => startEdit(item), variant: 'primary' },
+              { icon: 'trash-outline', accessibilityLabel: 'Delete', onPress: () => handleDelete(item.ingredient_id), variant: 'danger' },
+            ]}
+          />
         )}
       />
 
-      <TouchableOpacity style={styles.fab} onPress={onAdd}>
-        <Text style={styles.fabText}>+</Text>
+      {editingItem && (
+        <PantryItemQuantityPopup
+          title={`Edit ${editingItem.ingredient?.name ?? 'item'} in Pantry`}
+          quantity={editQuantity}
+          onQuantityChange={setEditQuantity}
+          unit={editUnit}
+          onUnitChange={setEditUnit}
+          expiryDate={editExpiryDate}
+          onExpiryDateChange={setEditExpiryDate}
+          primaryLabel="Save"
+          primaryIcon="checkmark"
+          onPrimary={saveEdit}
+          onCancel={cancelEdit}
+        />
+      )}
+
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={onAdd}
+        accessibilityRole="button"
+        accessibilityLabel="Add pantry item"
+      >
+        <Ionicons name="add" size={32} color={COLORS.buttonText} />
       </TouchableOpacity>
     </View>
   );

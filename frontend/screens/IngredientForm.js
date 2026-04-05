@@ -3,8 +3,10 @@ import {
     View, Text, TextInput, TouchableOpacity,
     ActivityIndicator, KeyboardAvoidingView, Platform
 } from "react-native";
+import { Ionicons } from '@expo/vector-icons';
 import { createIngredient } from '../lib/api';
 import styles from '../styles/IngredientForm.styles';
+import { COLORS } from '../styles/colors';
 
 
 
@@ -47,8 +49,14 @@ export default function IngredientForm({ session, onAdded }) {
                         onSubmitEditing={handleAdd}
                         returnKeyType="done"
                     />
-                    <TouchableOpacity style={styles.button} onPress={handleAdd} disabled={loading}>
-                        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Add</Text>}
+                    <TouchableOpacity
+                        style={styles.button}
+                        onPress={handleAdd}
+                        disabled={loading}
+                        accessibilityRole="button"
+                        accessibilityLabel="Add ingredient"
+                    >
+                        {loading ? <ActivityIndicator color={COLORS.buttonText} /> : <Ionicons name="add-circle" size={26} color={COLORS.buttonText} />}
                     </TouchableOpacity>
                 </View>
                 {error && <Text style={styles.error}>{error}</Text>}

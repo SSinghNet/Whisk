@@ -1,5 +1,5 @@
 import { StyleSheet } from 'react-native';
-import { COLORS } from './colors';
+import { COLORS, THEME } from './colors';
 
 export default StyleSheet.create({
   screen: {
@@ -7,36 +7,56 @@ export default StyleSheet.create({
     backgroundColor: COLORS.background,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 20,
+    paddingHorizontal: THEME.spacing.lg,
   },
   card: {
     width: '100%',
     maxWidth: 420,
     backgroundColor: COLORS.surface,
-    borderRadius: 14,
-    padding: 20,
-    shadowColor: COLORS.cardShadow,
-    shadowOpacity: 0.08,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 3,
+    borderRadius: THEME.sizing.radius.xxl,
+    padding: THEME.spacing.xl,
+    ...THEME.shadow.light,
   },
-  title: { fontSize: 28, fontWeight: '700', marginBottom: 6, color: COLORS.text },
-  subtitle: { fontSize: 15, color: COLORS.textSecondary, marginBottom: 18 },
+  title: {
+    fontSize: THEME.typography.fontSize.xxxxl,
+    fontWeight: THEME.typography.fontWeight.bold,
+    marginBottom: THEME.spacing.xs,
+    color: COLORS.text,
+  },
+  subtitle: {
+    fontSize: THEME.typography.fontSize.md,
+    color: COLORS.textSecondary,
+    marginBottom: THEME.spacing.lg,
+  },
   input: {
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 15,
-    marginBottom: 12,
+    borderRadius: THEME.sizing.radius.lg,
+    paddingHorizontal: THEME.spacing.md,
+    paddingVertical: THEME.spacing.md,
+    fontSize: THEME.typography.fontSize.md,
+    marginBottom: THEME.spacing.md,
     backgroundColor: COLORS.surface,
     color: COLORS.text,
   },
   disabledButton: { opacity: 0.6 },
-  primaryButtonText: { color: COLORS.surface, fontSize: 16, fontWeight: '600' },
-  secondaryButton: { marginTop: 14, alignItems: 'center' },
-  secondaryButtonText: { color: COLORS.primary, fontSize: 14, fontWeight: '500' },
-  errorText: { color: COLORS.danger, marginBottom: 8, fontSize: 13 },
+  primaryButtonText: {
+    color: COLORS.buttonText,
+    fontSize: THEME.typography.fontSize.base,
+    fontWeight: THEME.typography.fontWeight.semibold,
+  },
+  secondaryButton: {
+    marginTop: THEME.spacing.lg,
+    alignItems: 'center',
+  },
+  secondaryButtonText: {
+    color: COLORS.primary,
+    fontSize: THEME.typography.fontSize.sm,
+    fontWeight: THEME.typography.fontWeight.medium,
+  },
+  errorText: {
+    color: COLORS.danger,
+    marginBottom: THEME.spacing.md,
+    fontSize: THEME.typography.fontSize.sm,
+  },
 });

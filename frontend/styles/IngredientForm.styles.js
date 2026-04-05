@@ -1,28 +1,48 @@
 import { StyleSheet } from 'react-native';
-import { COLORS } from './colors';
+import { COLORS, THEME } from './colors';
 
 export default StyleSheet.create({
-  container: { padding: 16, backgroundColor: COLORS.surface },
-  title: { fontSize: 20, fontWeight: '600', marginBottom: 12, color: COLORS.text },
-  row: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  container: {
+    padding: THEME.spacing.lg,
+    backgroundColor: COLORS.surface,
+  },
+  title: {
+    fontSize: THEME.typography.fontSize.xl,
+    fontWeight: THEME.typography.fontWeight.semibold,
+    marginBottom: THEME.spacing.md,
+    color: COLORS.text,
+  },
+  row: {
+    flexDirection: 'row',
+    gap: THEME.spacing.md,
+    alignItems: 'center',
+  },
   input: {
     flex: 1,
     borderWidth: 1,
     borderColor: COLORS.borderSoft,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
+    borderRadius: THEME.sizing.radius.md,
+    paddingHorizontal: THEME.spacing.md,
+    paddingVertical: THEME.spacing.md,
+    fontSize: THEME.typography.fontSize.base,
     backgroundColor: COLORS.surface,
     color: COLORS.text,
   },
   button: {
     backgroundColor: COLORS.primary,
-    borderRadius: 8,
-    paddingHorizontal: 20,
+    borderRadius: THEME.sizing.radius.md,
+    paddingHorizontal: THEME.spacing.lg,
     justifyContent: 'center',
-    height: 44,
+    height: THEME.sizing.buttonHeight,
   },
-  buttonText: { color: COLORS.surface, fontWeight: '600', fontSize: 16 },
-  error: { color: COLORS.danger, marginTop: 8, fontSize: 14 },
+  buttonText: {
+    color: COLORS.buttonText,
+    fontWeight: THEME.typography.fontWeight.semibold,
+    fontSize: THEME.typography.fontSize.base,
+  },
+  error: {
+    color: COLORS.danger,
+    marginTop: THEME.spacing.md,
+    fontSize: THEME.typography.fontSize.base,
+  },
 });

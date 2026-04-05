@@ -9,17 +9,16 @@
     "web": "expo start --web",
     "prod:android": "EXPO_PUBLIC_APP_ENV=production expo start --android",
     "prod:ios": "EXPO_PUBLIC_APP_ENV=production expo start --ios",
-
     "build:android:preview": "eas build --platform android --profile preview",
     "build:ios:preview": "eas build --platform ios --profile preview",
     "build:all:preview": "eas build --platform all --profile preview",
- 
     "build:android": "eas build --platform android",
     "build:ios": "eas build --platform ios",
     "build:all": "eas build --platform all"
-   
   },
   "dependencies": {
+    "@expo/vector-icons": "^15.1.1",
+    "@react-native-community/datetimepicker": "^9.1.0",
     "@react-native-picker/picker": "^2.11.4",
     "@supabase/supabase-js": "^2.100.0",
     "expo": "~55.0.4",
@@ -28,6 +27,7 @@
     "expo-status-bar": "~55.0.4",
     "react": "19.2.0",
     "react-native": "0.83.2",
+    "react-native-date-picker": "^5.0.13",
     "react-native-safe-area-context": "^5.7.0"
   },
   "private": true

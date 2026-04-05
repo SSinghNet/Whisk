@@ -6,6 +6,9 @@ import {
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Picker } from '@react-native-picker/picker';
 import { lookupBarcode, addPantryItem } from '../lib/api';
+import styles from '../styles/BarcodeScannerScreen.styles';
+import { Ionicons } from '@expo/vector-icons';
+import { COLORS } from '../styles/colors';
 
 const UNIT_OPTIONS = [
     'count', 'gram', 'ounce', 'pound',
@@ -149,10 +152,12 @@ export default function BarcodeScannerScreen({ session, onDone }) {
                     style={[styles.button, adding && styles.buttonDisabled]}
                     onPress={handleAddToPantry}
                     disabled={adding}
+                    accessibilityRole="button"
+                    accessibilityLabel="Add to pantry"
                 >
                     {adding
-                        ? <ActivityIndicator color="#fff" />
-                        : <Text style={styles.buttonText}>Add to Pantry</Text>
+                        ? <ActivityIndicator color={COLORS.buttonText} />
+                        : <Ionicons name="bag-add-outline" size={26} color={COLORS.buttonText} />
                     }
                 </TouchableOpacity>
 
@@ -172,8 +177,13 @@ export default function BarcodeScannerScreen({ session, onDone }) {
                 <TouchableOpacity style={styles.button} onPress={resetScanner}>
                     <Text style={styles.buttonText}>Scan Again</Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.secondaryButton} onPress={onDone}>
-                    <Text style={styles.secondaryButtonText}>Add Manually</Text>
+                <TouchableOpacity
+                    style={styles.secondaryButton}
+                    onPress={onDone}
+                    accessibilityRole="button"
+                    accessibilityLabel="Add manually"
+                >
+                    <Ionicons name="create-outline" size={26} color={COLORS.text} />
                 </TouchableOpacity>
             </View>
         );
@@ -200,152 +210,6 @@ export default function BarcodeScannerScreen({ session, onDone }) {
                 )}
             </View>
 
-            <TouchableOpacity style={styles.cancelButton} onPress={onDone}>
-                <Text style={styles.cancelText}>Cancel</Text>
-            </TouchableOpacity>
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-        backgroundColor: '#fff',
-    },
-    center: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 24,
-        backgroundColor: '#fff',
-    },
-    scannerContainer: {
-        flex: 1,
-        backgroundColor: '#000',
-    },
-    overlay: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    overlayTitle: {
-        color: '#fff',
-        fontSize: 18,
-        fontWeight: '600',
-        marginBottom: 24,
-    },
-    scanFrame: {
-        width: 260,
-        height: 160,
-        borderWidth: 2,
-        borderColor: '#fff',
-        borderRadius: 12,
-    },
-    lookingUpBox: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginTop: 24,
-        gap: 10,
-    },
-    lookingUpText: {
-        color: '#fff',
-        fontSize: 15,
-    },
-    cancelButton: {
-        position: 'absolute',
-        bottom: 40,
-        alignSelf: 'center',
-        backgroundColor: 'rgba(0,0,0,0.6)',
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        borderRadius: 24,
-    },
-    cancelText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: '700',
-        marginBottom: 12,
-    },
-    subtitle: {
-        fontSize: 15,
-        color: '#6b7280',
-        marginBottom: 24,
-        textAlign: 'center',
-    },
-    productCard: {
-        backgroundColor: '#f3f4f6',
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 20,
-    },
-    productName: {
-        fontSize: 18,
-        fontWeight: '700',
-        marginBottom: 4,
-    },
-    brand: {
-        fontSize: 14,
-        color: '#6b7280',
-        marginBottom: 4,
-    },
-    ingredientLabel: {
-        fontSize: 14,
-        color: '#374151',
-        marginTop: 4,
-    },
-    label: {
-        fontSize: 14,
-        fontWeight: '600',
-        marginBottom: 4,
-        marginTop: 12,
-        color: '#374151',
-    },
-    input: {
-        borderWidth: 1,
-        borderColor: '#d1d5db',
-        borderRadius: 10,
-        paddingHorizontal: 12,
-        paddingVertical: 10,
-        fontSize: 15,
-        backgroundColor: '#fff',
-    },
-    picker: {
-        marginTop: -8,
-    },
-    button: {
-        backgroundColor: '#2563eb',
-        borderRadius: 10,
-        height: 44,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: 20,
-    },
-    buttonDisabled: {
-        opacity: 0.6,
-    },
-    buttonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: '600',
-    },
-    secondaryButton: {
-        marginTop: 14,
-        alignItems: 'center',
-    },
-    secondaryButtonText: {
-        color: '#2563eb',
-        fontSize: 14,
-        fontWeight: '500',
-    },
-    permissionText: {
-        fontSize: 15,
-        color: '#374151',
-        textAlign: 'center',
-        marginBottom: 20,
-    },
-});

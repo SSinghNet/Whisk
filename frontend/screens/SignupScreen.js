@@ -90,7 +90,7 @@ export default function SignupScreen({ onSignup, onSwitchToLogin, loading, error
                 <AppButton
                     title="Already have an account? Login"
                     onPress={onSwitchToLogin}
-                    variant="secondary"
+                    variant="ghost"
                     style={styles.secondaryButton}
                 />
             </View>

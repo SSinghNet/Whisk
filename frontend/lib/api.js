@@ -35,6 +35,11 @@ const fetchJson = async (path, { method = 'GET', token, body } = {}) => {
 };
 
 export const getRecipes = (token) => fetchJson('/recipe', { token });
+export const getUserRecipes = (token, query = '') =>
+  fetchJson(`/recipe/user${query ? `?search=${encodeURIComponent(query)}` : ''}`, { token });
+export const getRecipe = (token, id) => fetchJson(`/recipe/${id}`, { token });
+export const addRecipeToUser = (token, recipeId) => fetchJson(`/recipe/${recipeId}/users`, { method: 'POST', token });
+export const removeRecipeFromUser = (token, recipeId) => fetchJson(`/recipe/${recipeId}/users`, { method: 'DELETE', token });
 export const createUserRecord = (token) => fetchJson('/users/register', { method: 'POST', token });
 
 export const getPantryItems = (token, query = '') =>
