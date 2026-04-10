@@ -6,6 +6,7 @@ import { UnitCode } from './shared.schema.js'
 export const PantryIngredientResponseSchema = registry.register(
   'PantryIngredient',
   z.object({
+    pantry_ingredient_id: z.number(),
     user_id: z.number(),
     ingredient_id: z.number(),
     ingredient: IngredientResponseSchema,
@@ -70,7 +71,6 @@ registry.registerPath({
       content: { 'application/json': { schema: PantryIngredientResponseSchema } },
     },
     400: { description: 'Bad request' },
-    409: { description: 'Ingredient already exists' },
   },
 })
 
