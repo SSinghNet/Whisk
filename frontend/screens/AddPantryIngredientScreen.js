@@ -60,12 +60,7 @@ export default function AddPantryIngredientScreen({ session, onAdded, onCancel, 
       });
       onAdded && onAdded();
     } catch (e) {
-      const message = e.message || 'Failed to add to pantry';
-      if (message.toLowerCase().includes('already exists')) {
-        Alert.alert('Duplicate Item', 'This ingredient is already in your pantry.')
-      } else {
-        Alert.alert('Error', message)
-      }
+      Alert.alert('Error', e.message || 'Failed to add to pantry');
     }
   };
 

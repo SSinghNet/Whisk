@@ -90,12 +90,7 @@ export default function BarcodeScannerScreen({ session, onDone }) {
                 { text: 'Done', onPress: onDone },
             ]);
         } catch (err) {
-            const msg = err.message || 'Failed to add to pantry';
-            if (msg.toLowerCase().includes('already exists')) {
-                Alert.alert('Duplicate', 'This ingredient is already in your pantry.');
-            } else {
-                Alert.alert('Error', msg);
-            }
+            Alert.alert('Error', err.message || 'Failed to add to pantry');
         } finally {
             setAdding(false);
         }
