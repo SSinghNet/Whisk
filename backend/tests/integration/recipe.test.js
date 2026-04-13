@@ -25,11 +25,14 @@ describe('Recipe routes', () => {
   });
 
   beforeEach(async () => {
+    // Clean up user_recipe first (FK constraint), then orphaned test recipes
     await prisma.user_recipe.deleteMany({ where: { user_id: appUser.user_id } });
+    await prisma.recipe.deleteMany({ where: { title: { startsWith: 'Test Recipe' } } });
   });
 
   afterAll(async () => {
     await prisma.user_recipe.deleteMany({ where: { user_id: appUser.user_id } });
+    await prisma.recipe.deleteMany({ where: { title: { startsWith: 'Test Recipe' } } });
     await prisma.$disconnect();
   });
 
@@ -106,7 +109,7 @@ describe('Recipe routes', () => {
   // GET /recipe/user
   // ---------------------------------------------------------------------------
   describe('GET /recipe/user', () => {
-    test('returns 200 with the authenticated user\'s recipes', async () => {
+    test("returns 200 with the authenticated user's recipes", async () => {
       const recipe = await createRecipeInDb({ title: 'My Personal Recipe' });
       await linkRecipeToUser(recipe.recipe_id);
 

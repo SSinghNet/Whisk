@@ -13,7 +13,12 @@ describe('Ingredient routes', () => {
   });
 
   beforeEach(async () => {
-    await prisma.ingredient.deleteMany();
+    // Only clean up ingredients created by this test suite
+    if (createdIds.length) {
+      await prisma.ingredient.deleteMany({
+        where: { ingredient_id: { in: createdIds } },
+      });
+    }
     createdIds = [];
   });
 
@@ -54,6 +59,8 @@ describe('Ingredient routes', () => {
       expect(res.statusCode).toBe(201);
       expect(res.body).toHaveProperty('ingredient_id');
       expect(res.body).toHaveProperty('name', 'rice');
+
+      createdIds.push(Number(res.body.ingredient_id));
     });
 
     test('returns 400 when name is missing', async () => {
@@ -200,8 +207,4 @@ describe('Ingredient routes', () => {
       });
     });
   });
-});
-
-afterAll(async () => {
-  await prisma.$disconnect();
 });
