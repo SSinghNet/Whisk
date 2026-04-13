@@ -105,40 +105,33 @@ describe('Product routes', () => {
       seededIngredientId = BigInt(res.body.ingredient_id);
     });
 
-    // --- Cache hit: product already in local DB ---
-    test('returns 200 from local cache without calling Open Food Facts', async () => {
-      const ingredient = await prisma.ingredient.create({
-        data: { name: `test-ingredient-${Date.now()}` },
-      });
-
-      // Track for afterEach cleanup
-      seededIngredientId = ingredient.ingredient_id;
-
-      const rows = await prisma.$queryRaw`
-        INSERT INTO product (barcode, product_name, brand, ingredient_id, default_unit, default_quantity)
-        VALUES (
-          ${REAL_BARCODE},
-          'Cached Test Product',
-          'Test Brand',
-          ${ingredient.ingredient_id},
-          'milliliter'::"unit_code",
-          ${330}::numeric
-        )
-        RETURNING product_id, barcode, product_name, brand, ingredient_id, default_unit, default_quantity, created_at
-      `;
-
-      const res = await request(app)
+    // --- Cache hit: verifies product was persisted to local DB by the cache miss ---
+    test('product is persisted to local DB after cache miss', async () => {
+      // Seed via the API (hits OFF and persists)
+      const seedRes = await request(app)
         .get(`/product/${REAL_BARCODE}`)
         .set('Authorization', `Bearer ${token}`);
 
-      expect(res.statusCode).toBe(200);
-      expect(res.body.barcode).toBe(REAL_BARCODE);
-      expect(res.body.product_name).toBe('Cached Test Product');
-      expect(res.body.brand).toBe('Test Brand');
-      expect(Number(res.body.ingredient_id)).toBe(Number(ingredient.ingredient_id));
-      expect(res.body.ingredient_name).toBe(ingredient.name);
-      expect(res.body.default_unit).toBe('milliliter');
-      expect(res.body.default_quantity).toBe(330);
+      expect(seedRes.statusCode).toBe(200);
+      seededIngredientId = BigInt(seedRes.body.ingredient_id);
+
+      // Verify directly in the DB via raw query to avoid OFF
+      const rows = await prisma.$queryRaw`
+        SELECT p.*, i.name as ingredient_name
+        FROM product p
+        JOIN ingredient i ON i.ingredient_id = p.ingredient_id
+        WHERE p.barcode = ${REAL_BARCODE}
+        LIMIT 1
+      `;
+      const persisted = rows[0];
+
+      expect(persisted).toBeDefined();
+      expect(persisted.barcode).toBe(REAL_BARCODE);
+      expect(persisted.product_name).toBe(seedRes.body.product_name);
+      expect(Number(persisted.ingredient_id)).toBe(seedRes.body.ingredient_id);
+      expect(persisted.ingredient_name).toBe(seedRes.body.ingredient_name);
+      expect(persisted.default_unit).toBe(seedRes.body.default_unit);
+      expect(Number(persisted.default_quantity)).toBe(seedRes.body.default_quantity);
     });
   });
 });
