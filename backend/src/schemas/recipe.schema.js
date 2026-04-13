@@ -9,6 +9,44 @@ export const RecipeIngredientSchema = z.object({
   amount: z.number().nullable().optional(),
   unit: UnitCode,
   ingredient: IngredientResponseSchema,
+  pantry_status: z.object({
+    status: z.enum(['missing', 'insufficient', 'available']),
+    reason: z.string(),
+    required_quantity: z.number().nullable(),
+    required_unit: UnitCode,
+    pantry_quantity: z.number().nullable(),
+    pantry_items: z.array(z.object({
+      pantry_ingredient_id: z.number(),
+      quantity: z.number().nullable(),
+      unit: UnitCode,
+      expiry_date: z.string().nullable(),
+    })),
+    missing_quantity: z.number().nullable(),
+    missing_unit: UnitCode.nullable(),
+    deduction_supported: z.boolean(),
+    can_deduct: z.boolean(),
+  }).optional(),
+})
+
+export const PantryStatusSummarySchema = z.object({
+  available_count: z.number(),
+  insufficient_count: z.number(),
+  missing_count: z.number(),
+  missing_ingredients: z.array(z.object({
+    ingredient_id: z.number(),
+    name: z.string(),
+    status: z.enum(['missing', 'insufficient']),
+    missing_quantity: z.number().nullable(),
+    missing_unit: UnitCode.nullable(),
+    reason: z.string(),
+  })),
+  make_recipe_blockers: z.array(z.object({
+    ingredient_id: z.number(),
+    name: z.string(),
+    reason: z.string(),
+    status: z.enum(['missing', 'insufficient', 'available']),
+  })),
+  can_make_recipe: z.boolean(),
 })
 
 export const RecipeResponseSchema = registry.register(
@@ -22,6 +60,7 @@ export const RecipeResponseSchema = registry.register(
     yield_unit: UnitCode.nullable().optional(),
     created_at: z.string(),
     recipe_ingredient: z.array(RecipeIngredientSchema),
+    pantry_status_summary: PantryStatusSummarySchema.optional(),
   })
 )
 
@@ -90,6 +129,23 @@ registry.registerPath({
       content: { 'application/json': { schema: RecipeResponseSchema } },
     },
     404: { description: 'Recipe not found' },
+  },
+})
+
+// POST /recipe/:id/make
+registry.registerPath({
+  method: 'post',
+  path: '/recipe/{id}/make',
+  summary: 'Deduct pantry ingredients for a recipe',
+  tags: ['Recipes'],
+  request: { params: z.object({ id: z.string().regex(/^[0-9]+$/) }) },
+  responses: {
+    200: {
+      description: 'Recipe made and pantry updated',
+      content: { 'application/json': { schema: RecipeResponseSchema } },
+    },
+    404: { description: 'Recipe not found' },
+    409: { description: 'Recipe cannot be made with current pantry ingredients' },
   },
 })
 

@@ -154,3 +154,30 @@ export const removeRecipeFromUser = async (req, res) => {
         res.status(500).json({ message: error.message || 'Internal server error' })
     }
 }
+
+export const makeRecipe = async (req, res) => {
+    const supabase_uid = req.user.id
+    const { id } = req.params
+
+    if (!id) {
+        return res.status(400).json({ message: "Recipe id is required" })
+    }
+
+    try {
+        const recipe = await service.makeRecipe(supabase_uid, id)
+        res.status(200).json(recipe)
+    } catch (error) {
+        if (error.statusCode === 404) {
+            return res.status(404).json({ message: error.message })
+        }
+
+        if (error.statusCode === 409) {
+            return res.status(409).json({
+                message: error.message,
+                details: error.details,
+            })
+        }
+
+        res.status(500).json({ message: error.message || 'Internal server error' })
+    }
+}

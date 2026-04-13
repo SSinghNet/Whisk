@@ -17,6 +17,8 @@ export const COLORS = {
   primarySoft: '#eef2ff',
   success: '#16a34a',
   successSoft: '#ecfdf5',
+  warning: '#d97706',
+  warningSoft: '#fffbeb',
   danger: '#dc2626',
   dangerSoft: '#fef2f2',
   info: '#3b82f6',
