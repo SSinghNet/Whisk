@@ -124,6 +124,49 @@ export default StyleSheet.create({
     marginLeft: THEME.spacing.xl + THEME.spacing.sm,
   },
 
+  // Change password
+  changePasswordLink: {
+    fontSize: THEME.typography.fontSize.base,
+    color: COLORS.primary,
+    fontWeight: THEME.typography.fontWeight.medium,
+  },
+  passwordForm: {
+    paddingTop: THEME.spacing.sm,
+    paddingBottom: THEME.spacing.md,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: THEME.sizing.radius.lg,
+    paddingHorizontal: THEME.spacing.md,
+    paddingVertical: THEME.spacing.md,
+    fontSize: THEME.typography.fontSize.md,
+    marginBottom: THEME.spacing.md,
+    backgroundColor: COLORS.surface,
+    color: COLORS.text,
+  },
+  passwordError: {
+    color: COLORS.danger,
+    fontSize: THEME.typography.fontSize.sm,
+    marginBottom: THEME.spacing.md,
+  },
+  successRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: THEME.spacing.sm,
+    paddingVertical: THEME.spacing.md,
+  },
+  successText: {
+    color: COLORS.success,
+    fontSize: THEME.typography.fontSize.base,
+    fontWeight: THEME.typography.fontWeight.medium,
+  },
+
+  // Keyboard avoiding
+  keyboardAvoiding: {
+    flex: 1,
+  },
+
   // Sign out
   signOutBtn: {
     marginTop: THEME.spacing.sm,
