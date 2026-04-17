@@ -1,9 +1,34 @@
+import { useEffect, useState } from 'react';
 import { ScrollView, View, Text, TouchableOpacity, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AppButton from '../components/AppButton';
+import ErrorMessage from '../components/ErrorMessage';
+import LoadingSpinner from '../components/LoadingSpinner';
+import RecipeMissingSummary from '../components/RecipeMissingSummary';
+import RecipeIngredientStatusCard from '../components/RecipeIngredientStatusCard';
 import styles from '../styles/RecipeScreen.styles';
 import { COLORS } from '../styles/colors';
-import { addRecipeToUser } from '../lib/api';
+import { addRecipeToUser, getRecipe, makeRecipe } from '../lib/api';
+
+const STATUS_CONFIG = {
+  missing: {
+    icon: 'close-circle',
+    color: COLORS.danger,
+    label: 'Missing from pantry',
+  },
+  insufficient: {
+    icon: 'help-circle',
+    color: COLORS.warning,
+    label: 'Not enough in pantry',
+  },
+  available: {
+    icon: 'checkmark-circle',
+    color: COLORS.success,
+    label: 'Available in pantry',
+  },
+};
+
+const getRecipeId = (recipe) => recipe?.recipe_id;
 
 export default function RecipeDetailScreen({
   recipe,
@@ -11,6 +36,36 @@ export default function RecipeDetailScreen({
   session,
   allowAddToList = false,
 }) {
+  const [recipeDetail, setRecipeDetail] = useState(recipe);
+  const [loading, setLoading] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const loadRecipe = async () => {
+    const recipeId = getRecipeId(recipe);
+
+    if (!session?.access_token || !recipeId) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const data = await getRecipe(session.access_token, recipeId);
+      setRecipeDetail(data);
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    setRecipeDetail(recipe);
+    loadRecipe();
+  }, [recipe?.recipe_id]);
+
   const handleAddToList = () => {
     Alert.alert('Add Recipe', 'Add this recipe to your saved recipes?', [
       { text: 'Cancel', style: 'cancel' },
@@ -19,7 +74,7 @@ export default function RecipeDetailScreen({
         style: 'default',
         onPress: async () => {
           try {
-            await addRecipeToUser(session.access_token, recipe.recipe_id);
+            await addRecipeToUser(session.access_token, getRecipeId(recipe));
             Alert.alert('Success', 'Recipe added to your list!');
           } catch (e) {
             if (e.message.includes('already added')) {
@@ -33,11 +88,39 @@ export default function RecipeDetailScreen({
     ]);
   };
 
+  const handleMakeRecipe = () => {
+    Alert.alert(
+      'Make Recipe',
+      'Use the ingredients from your pantry for this recipe?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Make Recipe',
+          onPress: async () => {
+            setActionLoading(true);
+            setError(null);
+
+            try {
+              const updatedRecipe = await makeRecipe(session.access_token, getRecipeId(recipe));
+              setRecipeDetail(updatedRecipe);
+              Alert.alert('Success', 'Pantry ingredients were deducted for this recipe.');
+            } catch (e) {
+              Alert.alert('Unable to make recipe', e.message);
+              await loadRecipe();
+            } finally {
+              setActionLoading(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const currentRecipe = recipeDetail || recipe;
+  const summary = currentRecipe?.pantry_status_summary;
+
   return (
-    <ScrollView
-      style={styles.detailContainer}
-      contentContainerStyle={allowAddToList ? styles.detailScrollContent : undefined}
-    >
+    <ScrollView style={styles.detailContainer} contentContainerStyle={styles.detailScrollContent}>
       <TouchableOpacity
         onPress={onBack}
         style={styles.backButton}
@@ -47,43 +130,56 @@ export default function RecipeDetailScreen({
         <Ionicons name="chevron-back" size={26} color={COLORS.primary} />
       </TouchableOpacity>
 
-      <Text style={styles.recipeName}>{recipe.title}</Text>
+      <ErrorMessage message={error} />
 
-      {recipe.yield_amount && (
-        <View style={{ marginBottom: 16 }}>
+      {loading ? <LoadingSpinner /> : null}
+
+      <Text style={styles.recipeName}>{currentRecipe.title}</Text>
+
+      <RecipeMissingSummary summary={summary} statusConfig={STATUS_CONFIG} />
+
+      {currentRecipe.yield_amount && (
+        <View style={styles.sectionBlock}>
           <Text style={styles.sectionLabel}>Yield</Text>
           <Text style={styles.instructions}>
-            {recipe.yield_amount} {recipe.yield_unit || ''}
+            {currentRecipe.yield_amount} {currentRecipe.yield_unit || ''}
           </Text>
         </View>
       )}
 
-      {recipe.recipe_ingredient && recipe.recipe_ingredient.length > 0 && (
-        <View style={{ marginBottom: 16 }}>
+      {currentRecipe.recipe_ingredient && currentRecipe.recipe_ingredient.length > 0 && (
+        <View style={styles.sectionBlock}>
           <Text style={styles.sectionLabel}>Ingredients</Text>
-          {recipe.recipe_ingredient.map((ing, idx) => (
-            <View key={idx} style={styles.ingredientRow}>
-              <Text style={styles.ingredientName}>{ing.ingredient.name}</Text>
-              <Text style={styles.ingredientAmount}>
-                {ing.amount != null ? `${ing.amount} ${ing.unit}` : ing.unit}
-              </Text>
-            </View>
+          {currentRecipe.recipe_ingredient.map((ing) => (
+            <RecipeIngredientStatusCard
+              key={ing.ingredient_id}
+              ingredient={ing}
+              statusConfig={STATUS_CONFIG}
+            />
           ))}
         </View>
       )}
 
-      {recipe.instructions && (
-        <View style={{ marginBottom: 16 }}>
+      {currentRecipe.instructions && (
+        <View style={styles.sectionBlock}>
           <Text style={styles.sectionLabel}>Instructions</Text>
-          <Text style={styles.instructions}>{recipe.instructions}</Text>
+          <Text style={styles.instructions}>{currentRecipe.instructions}</Text>
         </View>
       )}
+
+      <AppButton
+        title="Make Recipe"
+        onPress={handleMakeRecipe}
+        disabled={actionLoading || !summary?.can_make_recipe}
+        loading={actionLoading}
+        style={styles.recipeActionButton}
+      />
 
       {allowAddToList && session ? (
         <AppButton
           title="Add to my recipes"
           onPress={handleAddToList}
-          style={{ marginTop: 8 }}
+          style={styles.recipeActionButton}
         />
       ) : null}
     </ScrollView>

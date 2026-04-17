@@ -94,6 +94,66 @@ export default StyleSheet.create({
     marginTop: THEME.spacing.xxl,
     fontSize: THEME.typography.fontSize.base,
   },
+  expandBadge: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: THEME.spacing.xs,
+    minWidth: 32,
+  },
+  addEntryBadge: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: THEME.spacing.xs,
+    minWidth: 32,
+  },
+  expandBadgeText: {
+    color: COLORS.textMuted,
+    fontSize: THEME.typography.fontSize.sm,
+    fontWeight: THEME.typography.fontWeight.semibold,
+  },
+  groupEntries: {
+    marginTop: THEME.spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.borderSoft,
+    paddingTop: THEME.spacing.sm,
+    gap: THEME.spacing.sm,
+  },
+  groupEntryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: THEME.spacing.md,
+    paddingVertical: THEME.spacing.sm,
+  },
+  groupEntryDetails: {
+    flex: 1,
+    minWidth: 0,
+  },
+  groupEntryText: {
+    color: COLORS.textSecondary,
+    fontSize: THEME.typography.fontSize.sm,
+    lineHeight: 20,
+  },
+  groupEntryActions: {
+    flexDirection: 'row',
+    gap: THEME.spacing.xs,
+  },
+  entryActionButton: {
+    width: 36,
+    height: 36,
+    borderRadius: THEME.sizing.radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  entryActionPrimary: {
+    backgroundColor: COLORS.primarySoft,
+    borderColor: 'rgba(79, 70, 229, 0.22)',
+  },
+  entryActionDanger: {
+    backgroundColor: COLORS.dangerSoft,
+    borderColor: 'rgba(220, 38, 38, 0.2)',
+  },
   fab: {
     position: 'absolute',
     right: THEME.spacing.xl,

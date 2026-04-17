@@ -8,6 +8,7 @@ import {
     deleteRecipe,
     addRecipeToUser,
     removeRecipeFromUser,
+    makeRecipe,
 } from "../controllers/recipeController.js"
 
 const router = Router()
@@ -20,5 +21,6 @@ router.patch('/:id', updateRecipe)
 router.delete('/:id', deleteRecipe)
 router.post('/:id/users', addRecipeToUser)
 router.delete('/:id/users', removeRecipeFromUser)
+router.post('/:id/make', makeRecipe)
 
 export default router

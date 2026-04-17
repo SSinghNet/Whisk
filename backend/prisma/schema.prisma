@@ -18,6 +18,7 @@ model app_user {
   pantry_ingredient pantry_ingredient[]
   recipe_list       recipe_list[]
   user_recipe       user_recipe[]
+  user_shoppinglist user_shoppinglist[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -28,6 +29,7 @@ model ingredient {
   pantry_ingredient pantry_ingredient[]
   product           product[]
   recipe_ingredient recipe_ingredient[]
+  user_shoppinglist user_shoppinglist[]
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -40,16 +42,17 @@ model label {
 /// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
 model pantry_ingredient {
-  user_id       BigInt
-  ingredient_id BigInt
-  quantity      Decimal?   @db.Decimal(10, 3)
-  unit          unit_code
-  expiry_date   DateTime?  @db.Date
-  ingredient    ingredient @relation(fields: [ingredient_id], references: [ingredient_id], onUpdate: NoAction, map: "fk_pi_ingredient")
-  app_user      app_user   @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+  user_id              BigInt
+  ingredient_id        BigInt
+  quantity             Decimal?   @db.Decimal(10, 3)
+  unit                 unit_code
+  expiry_date          DateTime?  @db.Date
+  pantry_ingredient_id BigInt     @id @unique @default(autoincrement())
+  ingredient           ingredient @relation(fields: [ingredient_id], references: [ingredient_id], onUpdate: NoAction, map: "fk_pi_ingredient")
+  app_user             app_user   @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
 
-  @@id([user_id, ingredient_id])
   @@index([ingredient_id], map: "idx_pantry_ingredient_ingredient_id")
+  @@index([user_id], map: "idx_pantry_ingredient_user_id")
 }
 
 /// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
@@ -142,6 +145,19 @@ model user_recipe {
   app_user  app_user @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
 
   @@id([user_id, recipe_id])
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+/// This model contains row level security and requires additional setup for migrations. Visit https://pris.ly/d/row-level-security for more info.
+model user_shoppinglist {
+  ingredient_id BigInt     @default(autoincrement())
+  user_id       BigInt
+  quantity      Decimal    @db.Decimal
+  unit          unit_code
+  ingredient    ingredient @relation(fields: [ingredient_id], references: [ingredient_id], onDelete: NoAction, onUpdate: NoAction)
+  app_user      app_user   @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@id([ingredient_id, user_id])
 }
 
 enum unit_code {

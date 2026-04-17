@@ -109,32 +109,20 @@ CREATE INDEX IF NOT EXISTS idx_product_label_label_id
 
 
 -- ------------------------------------------------------------
--- PANTRY
--- One pantry per user
--- ------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS pantry (
-  pantry_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  user_id   BIGINT NOT NULL UNIQUE,
-  CONSTRAINT fk_pantry_user
-    FOREIGN KEY (user_id) REFERENCES app_user(user_id) ON DELETE CASCADE
-);
-
-
--- ------------------------------------------------------------
 -- PANTRY_INGREDIENT
 -- What's in a user's pantry, tracked by ingredient (not product).
 -- Barcode scan -> resolve to ingredient -> insert here.
 -- Manual entry -> pick/create ingredient -> insert here.
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pantry_ingredient (
-  pantry_id     BIGINT        NOT NULL,
-  ingredient_id BIGINT        NOT NULL,
-  quantity      NUMERIC(10,3),
-  unit          unit_code     NOT NULL,
-  expiry_date   DATE          NULL,
-  PRIMARY KEY (pantry_id, ingredient_id),
-  CONSTRAINT fk_pi_pantry
-    FOREIGN KEY (pantry_id)     REFERENCES pantry(pantry_id)              ON DELETE CASCADE,
+  pantry_ingredient_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id              BIGINT        NOT NULL,
+  ingredient_id        BIGINT        NOT NULL,
+  quantity             NUMERIC(10,3),
+  unit                 unit_code     NOT NULL,
+  expiry_date          DATE          NULL,
+  CONSTRAINT fk_pi_user
+    FOREIGN KEY (user_id)       REFERENCES app_user(user_id)              ON DELETE CASCADE,
   CONSTRAINT fk_pi_ingredient
     FOREIGN KEY (ingredient_id) REFERENCES ingredient(ingredient_id)      ON DELETE RESTRICT,
   CONSTRAINT chk_pi_qty_nonneg
@@ -143,6 +131,9 @@ CREATE TABLE IF NOT EXISTS pantry_ingredient (
 
 CREATE INDEX IF NOT EXISTS idx_pantry_ingredient_ingredient_id
   ON pantry_ingredient (ingredient_id);
+
+CREATE INDEX IF NOT EXISTS idx_pantry_ingredient_user_id
+  ON pantry_ingredient (user_id);
 
 
 -- ------------------------------------------------------------

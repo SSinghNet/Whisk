@@ -36,22 +36,14 @@ export const postPantryIngredient = async (req, res) => {
         return res.status(400).json({ message: "ingredient_id is required" })
     }
 
-    try {
-        const item = await service.postPantryIngredient(supabase_uid, {
-            ingredient_id,
-            quantity,
-            unit,
-            expiry_date,
-        })
+    const item = await service.postPantryIngredient(supabase_uid, {
+        ingredient_id,
+        quantity,
+        unit,
+        expiry_date,
+    })
 
-        res.status(201).json(item)
-    } catch (error) {
-        if (error.statusCode === 409 || error.message === 'Ingredient already exists in pantry') {
-            return res.status(409).json({ message: 'Ingredient already exists in pantry' })
-        }
-
-        res.status(500).json({ message: error.message || 'Internal server error' })
-    }
+    res.status(201).json(item)
 }
 
 export const updatePantryIngredient = async (req, res) => {

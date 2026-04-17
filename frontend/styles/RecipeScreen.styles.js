@@ -75,11 +75,45 @@ export default StyleSheet.create({
   backButton: {
     marginBottom: THEME.spacing.lg,
   },
+  sectionBlock: {
+    marginBottom: THEME.spacing.lg,
+  },
   recipeName: {
     fontSize: THEME.typography.fontSize.xxxxl,
     fontWeight: THEME.typography.fontWeight.bold,
     color: COLORS.text,
     marginBottom: THEME.spacing.lg,
+  },
+  summaryCard: {
+    backgroundColor: COLORS.surfaceMuted,
+    borderRadius: THEME.sizing.radius.xl,
+    padding: THEME.spacing.md,
+    marginBottom: THEME.spacing.md,
+    borderWidth: 1,
+    borderColor: COLORS.border,
+  },
+  summaryTitle: {
+    fontSize: THEME.typography.fontSize.lg,
+    fontWeight: THEME.typography.fontWeight.semibold,
+    color: COLORS.text,
+    marginBottom: THEME.spacing.sm,
+  },
+  summaryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  summaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: THEME.spacing.sm,
+    marginTop: THEME.spacing.xs,
+  },
+  summaryText: {
+    flex: 1,
+    fontSize: THEME.typography.fontSize.sm,
+    color: COLORS.textSecondary,
+    lineHeight: 18,
   },
   sectionLabel: {
     fontSize: THEME.typography.fontSize.lg,
@@ -104,9 +138,58 @@ export default StyleSheet.create({
     fontSize: THEME.typography.fontSize.base,
     color: COLORS.textSecondary,
   },
+  ingredientStatusCard: {
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: THEME.sizing.radius.lg,
+    paddingVertical: THEME.spacing.sm,
+    paddingHorizontal: THEME.spacing.md,
+    marginBottom: THEME.spacing.sm,
+    backgroundColor: COLORS.surface,
+  },
+  ingredientStatusTopRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: THEME.spacing.sm,
+  },
+  ingredientTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: THEME.spacing.sm,
+    flex: 1,
+  },
+  ingredientTitleText: {
+    flex: 1,
+  },
+  ingredientBadgeText: {
+    fontSize: THEME.typography.fontSize.xs,
+    fontWeight: THEME.typography.fontWeight.medium,
+    marginTop: 2,
+  },
+  ingredientNeedText: {
+    fontSize: THEME.typography.fontSize.sm,
+    color: COLORS.textSecondary,
+    lineHeight: 18,
+  },
+  ingredientAmountsColumn: {
+    minWidth: 92,
+    alignItems: 'flex-start',
+  },
+  pantryList: {
+    marginTop: THEME.spacing.xs,
+    gap: 2,
+  },
+  pantryItemText: {
+    fontSize: THEME.typography.fontSize.xs,
+    color: COLORS.textSecondary,
+    lineHeight: 16,
+  },
   instructions: {
     fontSize: THEME.typography.fontSize.base,
     color: COLORS.text,
     lineHeight: 20,
+  },
+  recipeActionButton: {
+    marginTop: THEME.spacing.sm,
   },
 });

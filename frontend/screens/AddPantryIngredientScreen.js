@@ -20,7 +20,7 @@ export default function AddPantryIngredientScreen({ session, onAdded, onCancel, 
   const [selected, setSelected] = useState(initialIngredient ?? null);
   const [quantity, setQuantity] = useState('');
   const [unit, setUnit] = useState('count');
-  const [expiry_date, setExpiryDate] = useState(new Date());
+  const [expiry_date, setExpiryDate] = useState(null);
   const [createPopup, setCreatePopup] = useState(false);
 
   const runSearch = async (q) => {
@@ -56,16 +56,11 @@ export default function AddPantryIngredientScreen({ session, onAdded, onCancel, 
         ingredient_id: selected.ingredient_id,
         quantity: Number(quantity),
         unit,
-        expiry_date: expiry_date.toISOString().split('T')[0] || null,
+        expiry_date: expiry_date ? expiry_date.toISOString().split('T')[0] : null,
       });
       onAdded && onAdded();
     } catch (e) {
-      const message = e.message || 'Failed to add to pantry';
-      if (message.toLowerCase().includes('already exists')) {
-        Alert.alert('Duplicate Item', 'This ingredient is already in your pantry.')
-      } else {
-        Alert.alert('Error', message)
-      }
+      Alert.alert('Error', e.message || 'Failed to add to pantry');
     }
   };
 
@@ -107,7 +102,10 @@ export default function AddPantryIngredientScreen({ session, onAdded, onCancel, 
           <IngredientCard
             title={item.name}
             selected={selected?.ingredient_id === item.ingredient_id}
-            onPress={() => setSelected(item)}
+            onPress={() => {
+              setSelected(item);
+              setExpiryDate(null);
+            }}
           />
         )}
       />
@@ -153,7 +151,10 @@ export default function AddPantryIngredientScreen({ session, onAdded, onCancel, 
           primaryLabel="Add to Pantry"
           primaryIcon="bag-add-outline"
           onPrimary={handleAddToPantry}
-          onCancel={() => setSelected(null)}
+          onCancel={() => {
+            setSelected(null);
+            setExpiryDate(null);
+          }}
         />
       )}
     </View>

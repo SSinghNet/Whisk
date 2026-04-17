@@ -72,6 +72,7 @@ describe('Pantry routes', () => {
         });
 
       expect(res.statusCode).toBe(201);
+      expect(res.body).toHaveProperty('pantry_ingredient_id');
       expect(res.body.ingredient_id).toBe(Number(ingredient.ingredient_id));
       expect(Number(res.body.quantity)).toBe(3);
       expect(res.body).toHaveProperty('unit', 'cup');
@@ -94,7 +95,7 @@ describe('Pantry routes', () => {
       });
     });
 
-    test('returns 409 when ingredient already exists in pantry', async () => {
+    test('allows duplicate pantry entries for the same ingredient', async () => {
       const ingredient = await makeIngredient();
 
       const firstRes = await request(app)
@@ -117,10 +118,9 @@ describe('Pantry routes', () => {
           unit: 'cup',
         });
 
-      expect(secondRes.statusCode).toBe(409);
-      expect(secondRes.body).toEqual({
-        message: 'Ingredient already exists in pantry',
-      });
+      expect(secondRes.statusCode).toBe(201);
+      expect(secondRes.body.ingredient_id).toBe(Number(ingredient.ingredient_id));
+      expect(secondRes.body.pantry_ingredient_id).not.toBe(firstRes.body.pantry_ingredient_id);
     });
   });
 
@@ -164,6 +164,47 @@ describe('Pantry routes', () => {
       expect(Number(found.quantity)).toBe(2);
       expect(found.unit).toBe('count');
       expect(found.ingredient.name).toBe(ingredient.name);
+    });
+
+    test('returns separate rows for duplicate ingredient entries', async () => {
+      const ingredient = await makeIngredient();
+
+      const firstRes = await request(app)
+        .post('/pantry')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          ingredient_id: Number(ingredient.ingredient_id),
+          quantity: 1,
+          unit: 'count',
+          expiry_date: '2026-12-31',
+        });
+
+      const secondRes = await request(app)
+        .post('/pantry')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          ingredient_id: Number(ingredient.ingredient_id),
+          quantity: 2,
+          unit: 'count',
+          expiry_date: '2027-01-15',
+        });
+
+      expect(firstRes.statusCode).toBe(201);
+      expect(secondRes.statusCode).toBe(201);
+
+      const res = await request(app)
+        .get('/pantry')
+        .set('Authorization', `Bearer ${token}`);
+
+      const matches = res.body.filter(
+        (item) => Number(item.ingredient_id) === Number(ingredient.ingredient_id)
+      );
+
+      expect(matches).toHaveLength(2);
+      expect(matches.map((item) => item.expiry_date?.split('T')[0]).sort()).toEqual([
+        '2026-12-31',
+        '2027-01-15',
+      ]);
     });
 
     test('filters pantry items by search query', async () => {
@@ -220,10 +261,11 @@ describe('Pantry routes', () => {
       expect(createRes.statusCode).toBe(201);
 
       const res = await request(app)
-        .get(`/pantry/${Number(ingredient.ingredient_id)}`)
+        .get(`/pantry/${Number(createRes.body.pantry_ingredient_id)}`)
         .set('Authorization', `Bearer ${token}`);
 
       expect(res.statusCode).toBe(200);
+      expect(res.body.pantry_ingredient_id).toBe(Number(createRes.body.pantry_ingredient_id));
       expect(res.body.ingredient_id).toBe(Number(ingredient.ingredient_id));
       expect(Number(res.body.quantity)).toBe(5);
       expect(res.body).toHaveProperty('unit', 'cup');
@@ -259,7 +301,7 @@ describe('Pantry routes', () => {
       expect(createRes.statusCode).toBe(201);
 
       const res = await request(app)
-        .patch(`/pantry/${Number(ingredient.ingredient_id)}`)
+        .patch(`/pantry/${Number(createRes.body.pantry_ingredient_id)}`)
         .set('Authorization', `Bearer ${token}`)
         .send({
           quantity: 10,
@@ -268,6 +310,7 @@ describe('Pantry routes', () => {
         });
 
       expect(res.statusCode).toBe(200);
+      expect(res.body.pantry_ingredient_id).toBe(Number(createRes.body.pantry_ingredient_id));
       expect(res.body.ingredient_id).toBe(Number(ingredient.ingredient_id));
       expect(Number(res.body.quantity)).toBe(10);
       expect(res.body).toHaveProperty('unit', 'count');
@@ -316,13 +359,13 @@ describe('Pantry routes', () => {
       expect(createRes.statusCode).toBe(201);
 
       const deleteRes = await request(app)
-        .delete(`/pantry/${Number(ingredient.ingredient_id)}`)
+        .delete(`/pantry/${Number(createRes.body.pantry_ingredient_id)}`)
         .set('Authorization', `Bearer ${token}`);
 
       expect(deleteRes.statusCode).toBe(204);
 
       const getRes = await request(app)
-        .get(`/pantry/${Number(ingredient.ingredient_id)}`)
+        .get(`/pantry/${Number(createRes.body.pantry_ingredient_id)}`)
         .set('Authorization', `Bearer ${token}`);
 
       expect(getRes.statusCode).toBe(404);
@@ -339,4 +382,8 @@ describe('Pantry routes', () => {
       });
     });
   });
+});
+
+afterAll(async () => {
+  await prisma.$disconnect();
 });
