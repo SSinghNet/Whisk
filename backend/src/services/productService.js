@@ -6,7 +6,7 @@ const OPEN_FOOD_FACTS_URL = 'https://world.openfoodfacts.org/api/v0/product'
 // Handles formats like "500 g", "1 L", "330 ml", "12 oz", "6 x 330 ml".
 // Parses an Open Food Facts quantity string (e.g. "591 ml", "6 x 330 ml", "500g")
 // into { unit, quantity } matching our unit_code enum.
-function parseQuantity(quantityStr) {
+export function parseQuantity(quantityStr) {
     if (!quantityStr) return { unit: 'count', quantity: null }
     const lower = quantityStr.toLowerCase()
 
@@ -21,7 +21,7 @@ function parseQuantity(quantityStr) {
     return { unit: 'count', quantity: null }
 }
 
-function resolve(num, unitStr) {
+export function resolve(num, unitStr) {
     let unit = 'count'
     if (unitStr === 'kg')                              { unit = 'gram';       num = num * 1000 }
     else if (unitStr === 'g')                            unit = 'gram'

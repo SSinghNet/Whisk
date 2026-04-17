@@ -31,8 +31,11 @@ describe('Pantry routes', () => {
   });
 
   beforeEach(async () => {
-    await prisma.pantry_ingredient.deleteMany();
-    await prisma.ingredient.deleteMany();
+    // Only clean up pantry items and ingredients belonging to the test user
+    await prisma.pantry_ingredient.deleteMany({ where: { user_id: appUser.user_id } });
+    await prisma.ingredient.deleteMany({
+      where: { ingredient_id: { in: createdIngredientIds } },
+    });
     createdIngredientIds = [];
   });
 
