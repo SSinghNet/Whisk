@@ -12,10 +12,10 @@ import { addPantryItem, getPantryItems, deletePantryItem, updatePantryItem } fro
 import styles from '../styles/PantryScreen.styles';
 
 function parsePantryExpiry(iso) {
-  if (!iso) return new Date();
+  if (!iso) return null;
   const part = String(iso).split('T')[0];
   const [y, m, d] = part.split('-').map(Number);
-  if (!y || !m || !d) return new Date();
+  if (!y || !m || !d) return null;
   return new Date(y, m - 1, d);
 }
 
@@ -64,11 +64,11 @@ export default function PantryScreen({ session, onAdd }) {
   const [editingItem, setEditingItem] = useState(null);
   const [editQuantity, setEditQuantity] = useState('');
   const [editUnit, setEditUnit] = useState('count');
-  const [editExpiryDate, setEditExpiryDate] = useState(new Date());
+  const [editExpiryDate, setEditExpiryDate] = useState(null);
   const [addingIngredient, setAddingIngredient] = useState(null);
   const [addQuantity, setAddQuantity] = useState('');
   const [addUnit, setAddUnit] = useState('count');
-  const [addExpiryDate, setAddExpiryDate] = useState(new Date());
+  const [addExpiryDate, setAddExpiryDate] = useState(null);
   const [expandedIngredients, setExpandedIngredients] = useState({});
 
   const fetchPantry = async (q = '', { quietSearch = false } = {}) => {
@@ -116,7 +116,7 @@ export default function PantryScreen({ session, onAdd }) {
     setEditingItem(null);
     setEditQuantity('');
     setEditUnit('count');
-    setEditExpiryDate(new Date());
+    setEditExpiryDate(null);
   };
 
   const saveEdit = async () => {
@@ -130,7 +130,7 @@ export default function PantryScreen({ session, onAdd }) {
     const payload = {
       quantity: quantityValue,
       unit: editUnit,
-      expiry_date: editExpiryDate.toISOString().split('T')[0],
+      expiry_date: editExpiryDate ? editExpiryDate.toISOString().split('T')[0] : null,
     };
 
     try {
@@ -146,14 +146,14 @@ export default function PantryScreen({ session, onAdd }) {
     setAddingIngredient(group);
     setAddQuantity('');
     setAddUnit(group.entries[0]?.unit || 'count');
-    setAddExpiryDate(new Date());
+    setAddExpiryDate(null);
   };
 
   const cancelAddEntry = () => {
     setAddingIngredient(null);
     setAddQuantity('');
     setAddUnit('count');
-    setAddExpiryDate(new Date());
+    setAddExpiryDate(null);
   };
 
   const saveNewEntry = async () => {
@@ -170,7 +170,7 @@ export default function PantryScreen({ session, onAdd }) {
         ingredient_id: addingIngredient.ingredient_id,
         quantity: quantityValue,
         unit: addUnit,
-        expiry_date: addExpiryDate.toISOString().split('T')[0],
+        expiry_date: addExpiryDate ? addExpiryDate.toISOString().split('T')[0] : null,
       });
       cancelAddEntry();
       setExpandedIngredients((current) => ({

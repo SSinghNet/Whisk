@@ -27,7 +27,8 @@ export default function PantryItemQuantityPopup({
   onCancel,
 }) {
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const dateStr = expiryDate.toISOString().split('T')[0];
+  const dateStr = expiryDate ? expiryDate.toISOString().split('T')[0] : 'No expiry date';
+  const pickerDate = expiryDate ?? new Date();
 
   return (
     <View style={styles.popupOverlay}>
@@ -67,9 +68,16 @@ export default function PantryItemQuantityPopup({
               <Text style={styles.dateText}>{dateStr}</Text>
               <Ionicons name="calendar-outline" size={22} color={COLORS.textSecondary} />
             </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => onExpiryDateChange(null)}
+              accessibilityRole="button"
+              accessibilityLabel="Clear expiry date"
+            >
+              <Text style={styles.dateLabel}>Clear expiry date</Text>
+            </TouchableOpacity>
             {showDatePicker ? (
               <DateTimePicker
-                value={expiryDate}
+                value={pickerDate}
                 mode="date"
                 display="default"
                 onChange={(event, selectedDate) => {
