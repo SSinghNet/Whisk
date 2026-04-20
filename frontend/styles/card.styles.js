@@ -36,8 +36,16 @@ export const cardStyles = StyleSheet.create({
   detail: {
     fontSize: THEME.typography.fontSize.sm,
     color: COLORS.textSecondary,
-    marginTop: THEME.spacing.xs,
     lineHeight: 20,
+  },
+  detailRow: {
+    marginTop: THEME.spacing.xs,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: THEME.spacing.xs,
+  },
+  detailIcon: {
+    flexShrink: 0,
   },
   actions: {
     flexDirection: 'row',
