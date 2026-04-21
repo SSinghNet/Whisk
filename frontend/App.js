@@ -14,6 +14,7 @@ import BrowseRecipesScreen from './screens/BrowseRecipesScreen';
 import RecipeDetailScreen from './screens/RecipeDetailScreen';
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
+import UserProfileScreen from './screens/UserProfileScreen';
 import { supabase } from './lib/supabase';
 import { addPantryItem, addShoppingListItem, createUserRecord, deleteShoppingListItem, getShoppingList } from './lib/api';
 import styles from './styles/App.styles';
@@ -154,13 +155,8 @@ export default function App() {
     }
 
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
             <StatusBar barStyle='dark-content' />
-            <View style={styles.topNav}>
-                <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
-                    <Text style={styles.logoutText}>Log out</Text>
-                </TouchableOpacity>
-            </View>
 
             {activeScreen === 'recipes' && (
                 <View style={styles.mainContent}>
@@ -226,7 +222,16 @@ export default function App() {
                 </View>
             )}
 
-            {!['recipes','pantry','ingredients','addPantry','scan','shoppingList'].includes(activeScreen) && (
+            {activeScreen === 'profile' && (
+                <View style={styles.mainContent}>
+                    <UserProfileScreen
+                        session={session}
+                        onLogout={handleLogout}
+                    />
+                </View>
+            )}
+
+            {!['recipes','pantry','ingredients','addPantry','scan','shoppingList','profile'].includes(activeScreen) && (
                 <View style={styles.center}><Text>Unknown screen: {activeScreen}</Text></View>
             )}
 
@@ -267,16 +272,28 @@ export default function App() {
                     <Text style={[styles.bottomNavText, activeScreen === 'shoppingList' && styles.bottomNavTextActive]}>Shopping</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity 
-                    onPress={() => { setActiveScreen('recipes'); setBrowsingRecipes(false); setSelectedRecipe(null); }} 
+                <TouchableOpacity
+                    onPress={() => { setActiveScreen('recipes'); setBrowsingRecipes(false); setSelectedRecipe(null); }}
                     style={[styles.bottomNavButton, activeScreen === 'recipes' && styles.bottomNavActive]}
                 >
-                    <MaterialCommunityIcons 
-                        name="book-open" 
-                        size={24} 
+                    <MaterialCommunityIcons
+                        name="book-open"
+                        size={24}
                         color={activeScreen === 'recipes' ? COLORS.primary : COLORS.textMuted}
                     />
                     <Text style={[styles.bottomNavText, activeScreen === 'recipes' && styles.bottomNavTextActive]}>Recipes</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    onPress={() => setActiveScreen('profile')}
+                    style={[styles.bottomNavButton, activeScreen === 'profile' && styles.bottomNavActive]}
+                >
+                    <MaterialCommunityIcons
+                        name="account-circle-outline"
+                        size={24}
+                        color={activeScreen === 'profile' ? COLORS.primary : COLORS.textMuted}
+                    />
+                    <Text style={[styles.bottomNavText, activeScreen === 'profile' && styles.bottomNavTextActive]}>Profile</Text>
                 </TouchableOpacity>
             </View>
             </SafeAreaView>
