@@ -28,6 +28,7 @@ export const COLORS = {
   disabled: '#94a3b8',
 
   primaryAccentBorder: 'rgba(79, 70, 229, 0.22)',
+  successAccentBorder: 'rgba(22, 163, 74, 0.2)',
   dangerAccentBorder: 'rgba(220, 38, 38, 0.2)',
 
   overlay: 'rgba(15, 23, 42, 0.45)',

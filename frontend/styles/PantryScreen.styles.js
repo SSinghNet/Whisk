@@ -231,6 +231,10 @@ export default StyleSheet.create({
     backgroundColor: COLORS.dangerSoft,
     borderColor: COLORS.dangerAccentBorder,
   },
+  entryActionSuccess: {
+    backgroundColor: COLORS.successSoft,
+    borderColor: COLORS.successAccentBorder,
+  },
   fab: {
     position: 'absolute',
     right: THEME.spacing.xl,

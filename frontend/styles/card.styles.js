@@ -68,14 +68,14 @@ export const cardStyles = StyleSheet.create({
   },
   primary: {
     backgroundColor: COLORS.primarySoft,
-    borderColor: 'rgba(79, 70, 229, 0.22)',
+    borderColor: COLORS.primaryAccentBorder,
   },
   success: {
     backgroundColor: COLORS.successSoft,
-    borderColor: 'rgba(22, 163, 74, 0.2)',
+    borderColor: COLORS.successAccentBorder,
   },
   danger: {
     backgroundColor: COLORS.dangerSoft,
-    borderColor: 'rgba(220, 38, 38, 0.2)',
+    borderColor: COLORS.dangerAccentBorder,
   },
 });

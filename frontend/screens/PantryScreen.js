@@ -212,7 +212,7 @@ function groupPantryItems(items) {
   });
 }
 
-export default function PantryScreen({ session, onAdd }) {
+export default function PantryScreen({ session, onAdd, onMarkRanOut = null }) {
   const [pantry, setPantry] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -394,6 +394,24 @@ export default function PantryScreen({ session, onAdd }) {
       await fetchPantry(search, { quietSearch: true });
     } catch (e) {
       Alert.alert('Error', e.message || 'Failed to add pantry entry');
+    }
+  };
+
+  const markRanOut = async (entry) => {
+    try {
+      if (onMarkRanOut) {
+        await onMarkRanOut({
+          ingredient_id: entry.ingredient_id,
+          ingredient: entry.ingredient,
+          quantity: entry.quantity ?? 1,
+          unit: entry.unit ?? 'count',
+        });
+      }
+      await deletePantryItem(session.access_token, entry.pantry_ingredient_id);
+      await fetchPantry(search, { quietSearch: true });
+      Alert.alert('Added to shopping list', `${entry.ingredient?.name ?? 'Item'} was moved to your shopping list.`);
+    } catch (e) {
+      Alert.alert('Error', e.message || 'Failed to add item to shopping list');
     }
   };
 
@@ -595,6 +613,14 @@ export default function PantryScreen({ session, onAdd }) {
                           style={[styles.entryActionButton, styles.entryActionDanger]}
                         >
                           <Ionicons name="trash-outline" size={18} color={COLORS.danger} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => markRanOut(entry)}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Mark ${item.ingredient?.name ?? 'pantry item'} as ran out`}
+                          style={[styles.entryActionButton, styles.entryActionSuccess]}
+                        >
+                          <Ionicons name="cart-outline" size={18} color={COLORS.success} />
                         </TouchableOpacity>
                       </View>
                     </View>
