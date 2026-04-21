@@ -5,6 +5,7 @@ export default StyleSheet.create({
   safeArea: {
     flex: 1,
     backgroundColor: COLORS.background,
+    paddingTop: THEME.spacing.md,
   },
   mainContent: {
     flex: 1,
