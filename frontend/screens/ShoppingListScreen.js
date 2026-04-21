@@ -1,10 +1,17 @@
+import { useState } from 'react';
 import { Alert, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS } from '../styles/colors';
 import IngredientCard from '../components/IngredientCard';
+import PantryItemQuantityPopup from '../components/PantryItemQuantityPopup';
 import styles from '../styles/ShoppingListScreen.styles';
 
 export default function ShoppingListScreen({ items = [], onRemoveItem = null, onMoveToPantry = null }) {
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [quantity, setQuantity] = useState('');
+  const [unit, setUnit] = useState('count');
+  const [expiryDate, setExpiryDate] = useState(null);
+
   const handleDelete = async (item) => {
     if (!onRemoveItem) return;
 
@@ -16,11 +23,29 @@ export default function ShoppingListScreen({ items = [], onRemoveItem = null, on
   };
 
   const handleMoveToPantry = async (item) => {
-    if (!onMoveToPantry) return;
+    setSelectedItem(item);
+    setQuantity(String(item.quantity ?? 1));
+    setUnit(item.unit ?? 'count');
+    setExpiryDate(null);
+  };
+
+  const submitMoveToPantry = async () => {
+    if (!onMoveToPantry || !selectedItem) return;
+
+    const quantityValue = Number(quantity);
+    if (Number.isNaN(quantityValue) || quantityValue < 1) {
+      Alert.alert('Quantity must be a number greater than 0');
+      return;
+    }
 
     try {
-      await onMoveToPantry(item);
-      Alert.alert('Moved to pantry', `${item.ingredient?.name ?? 'Item'} was added back to pantry.`);
+      await onMoveToPantry(selectedItem, {
+        quantity: quantityValue,
+        unit,
+        expiry_date: expiryDate ? expiryDate.toISOString().split('T')[0] : null,
+      });
+      setSelectedItem(null);
+      Alert.alert('Moved to pantry', `${selectedItem.ingredient?.name ?? 'Item'} was added back to pantry.`);
     } catch (e) {
       Alert.alert('Error', e.message || 'Failed to move item to pantry');
     }
@@ -66,6 +91,22 @@ export default function ShoppingListScreen({ items = [], onRemoveItem = null, on
             ]}
           />
         ))
+      )}
+
+      {selectedItem && (
+        <PantryItemQuantityPopup
+          title={`Add ${selectedItem.ingredient?.name ?? 'Item'} to Pantry`}
+          quantity={quantity}
+          onQuantityChange={setQuantity}
+          unit={unit}
+          onUnitChange={setUnit}
+          expiryDate={expiryDate}
+          onExpiryDateChange={setExpiryDate}
+          primaryLabel="Add to Pantry"
+          primaryIcon="bag-add-outline"
+          onPrimary={submitMoveToPantry}
+          onCancel={() => setSelectedItem(null)}
+        />
       )}
     </View>
   );

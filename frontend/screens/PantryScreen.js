@@ -407,9 +407,7 @@ export default function PantryScreen({ session, onAdd, onMarkRanOut = null }) {
           unit: entry.unit ?? 'count',
         });
       }
-      await deletePantryItem(session.access_token, entry.pantry_ingredient_id);
-      await fetchPantry(search, { quietSearch: true });
-      Alert.alert('Added to shopping list', `${entry.ingredient?.name ?? 'Item'} was moved to your shopping list.`);
+      Alert.alert('Added to shopping list', `${entry.ingredient?.name ?? 'Item'} was added to your shopping list.`);
     } catch (e) {
       Alert.alert('Error', e.message || 'Failed to add item to shopping list');
     }

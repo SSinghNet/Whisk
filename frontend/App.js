@@ -52,12 +52,12 @@ export default function App() {
         await refreshShoppingList(session);
     }
 
-    async function moveShoppingListItemToPantry(item) {
+    async function moveShoppingListItemToPantry(item, pantryData = {}) {
         await addPantryItem(session.access_token, {
             ingredient_id: item.ingredient_id,
-            quantity: item.quantity ?? 1,
-            unit: item.unit ?? 'count',
-            expiry_date: null,
+            quantity: pantryData.quantity ?? item.quantity ?? 1,
+            unit: pantryData.unit ?? item.unit ?? 'count',
+            expiry_date: pantryData.expiry_date ?? null,
         });
         await deleteShoppingListItem(session.access_token, item.ingredient_id);
         await refreshShoppingList(session);
