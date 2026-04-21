@@ -152,9 +152,10 @@ const getPantryItemsForRecipe = async (db, userId, recipe) => {
 }
 
 export const getRecipes = async (search) => {
-    const where = search ? {
-        title: { contains: search, mode: 'insensitive' },
-    } : undefined
+    const where = {
+        is_private: false,
+        ...(search ? { title: { contains: search, mode: 'insensitive' } } : {}),
+    }
 
     return await prisma.recipe.findMany({
         where,
@@ -201,16 +202,45 @@ export const getRecipe = async (supabaseUid, recipeId) => {
     return buildRecipeAvailability(recipe, pantryItems)
 }
 
-export const createRecipe = async (data) => {
-    return await prisma.recipe.create({
-        data: {
-            title: data.title,
-            instructions: data.instructions || null,
-            image_url: data.image_url || null,
-            yield_amount: data.yield_amount || null,
-            yield_unit: data.yield_unit || null,
-        },
-        include: recipeInclude,
+export const createRecipe = async (supabaseUid, data) => {
+    const user_id = await resolveUserId(supabaseUid)
+
+    return await prisma.$transaction(async (tx) => {
+        const recipe = await tx.recipe.create({
+            data: {
+                title: data.title,
+                instructions: data.instructions || null,
+                image_url: data.image_url || null,
+                yield_amount: data.yield_amount || null,
+                yield_unit: data.yield_unit || null,
+                is_private: data.is_private ?? false,
+            },
+        })
+
+        for (const ing of data.ingredients) {
+            const ingredient = await tx.ingredient.upsert({
+                where: { name: ing.name },
+                create: { name: ing.name },
+                update: {},
+            })
+            await tx.recipe_ingredient.create({
+                data: {
+                    recipe_id: recipe.recipe_id,
+                    ingredient_id: ingredient.ingredient_id,
+                    amount: ing.amount || null,
+                    unit: ing.unit,
+                },
+            })
+        }
+
+        await tx.user_recipe.create({
+            data: { user_id, recipe_id: recipe.recipe_id },
+        })
+
+        return tx.recipe.findUnique({
+            where: { recipe_id: recipe.recipe_id },
+            include: recipeInclude,
+        })
     })
 }
 

@@ -93,6 +93,7 @@ model recipe {
   yield_amount      Decimal?            @db.Decimal(10, 3)
   yield_unit        unit_code?
   created_at        DateTime            @default(now()) @db.Timestamptz(6)
+  is_private        Boolean             @default(false)
   recipe_ingredient recipe_ingredient[]
   recipe_list_item  recipe_list_item[]
   user_recipe       user_recipe[]

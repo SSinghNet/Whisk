@@ -40,19 +40,22 @@ export const getRecipe = async (req, res) => {
 }
 
 export const createRecipe = async (req, res) => {
-    const { title, instructions, image_url, yield_amount, yield_unit } = req.body || {}
+    const supabase_uid = req.user.id
+    const { title, instructions, image_url, yield_amount, yield_unit, is_private, ingredients } = req.body || {}
 
     if (!title) {
         return res.status(400).json({ message: "title is required" })
     }
 
     try {
-        const recipe = await service.createRecipe({
+        const recipe = await service.createRecipe(supabase_uid, {
             title,
             instructions,
             image_url,
             yield_amount,
             yield_unit,
+            is_private: is_private ?? false,
+            ingredients: ingredients || [],
         })
 
         res.status(201).json(recipe)
