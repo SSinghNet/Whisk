@@ -12,6 +12,22 @@ function iconTint(variant) {
   return COLORS.primary;
 }
 
+function normalizeDetail(detail) {
+  if (typeof detail === 'string') {
+    return { text: detail };
+  }
+
+  if (detail && typeof detail === 'object') {
+    return {
+      text: String(detail.text ?? ''),
+      iconName: detail.iconName,
+      iconColor: detail.iconColor,
+    };
+  }
+
+  return { text: String(detail ?? '') };
+}
+
 export default function IngredientCard({
   title,
   details = [],
@@ -33,9 +49,23 @@ export default function IngredientCard({
         <View style={cardStyles.cardTopRow}>
           <View style={cardStyles.main}>
             <Text style={cardStyles.title}>{title}</Text>
-            {details.map((detail, index) => (
-              <Text style={cardStyles.detail} key={index}>{detail}</Text>
-            ))}
+            {details.map((detail, index) => {
+              const normalized = normalizeDetail(detail);
+
+              return (
+                <View style={cardStyles.detailRow} key={index}>
+                  {normalized.iconName ? (
+                    <Ionicons
+                      name={normalized.iconName}
+                      size={13}
+                      color={normalized.iconColor ?? COLORS.textMuted}
+                      style={cardStyles.detailIcon}
+                    />
+                  ) : null}
+                  <Text style={cardStyles.detail}>{normalized.text}</Text>
+                </View>
+              );
+            })}
           </View>
           {rightContent}
           {actions.length > 0 ? (

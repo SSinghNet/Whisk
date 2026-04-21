@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
-  View, Text, FlatList,
+  View, Text, FlatList, ScrollView,
   ActivityIndicator, Alert, TouchableOpacity
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -22,6 +22,153 @@ function parsePantryExpiry(iso) {
 function formatExpiry(iso) {
   return iso ? iso.split('T')[0] : 'none';
 }
+
+function getDaysUntilExpiry(iso) {
+  const expiryDate = parsePantryExpiry(iso);
+  if (!expiryDate) return null;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  return Math.floor((expiryDate.getTime() - today.getTime()) / 86400000);
+}
+
+function getExpiryTone(iso) {
+  const daysUntilExpiry = getDaysUntilExpiry(iso);
+
+  if (daysUntilExpiry == null) return 'Green';
+  if (daysUntilExpiry > 7) return 'Green';
+  if (daysUntilExpiry > 3) return 'Yellow';
+  return 'Red';
+}
+
+function getExpiryLabel(iso) {
+  const daysUntilExpiry = getDaysUntilExpiry(iso);
+
+  if (daysUntilExpiry == null) return 'unknown';
+  if (daysUntilExpiry < 0) return 'expired';
+  if (daysUntilExpiry === 0) return 'expires today';
+  if (daysUntilExpiry === 1) return '1 day left';
+  return `${daysUntilExpiry} days left`;
+}
+
+function getExpiryColor(iso) {
+  const tone = getExpiryTone(iso);
+
+  if (tone === 'Green') return COLORS.expirationGreen;
+  if (tone === 'Yellow') return COLORS.expirationYellow;
+  return COLORS.expirationRed;
+}
+
+function getExpiredItems(items) {
+  return items.filter((item) => {
+    const daysUntilExpiry = getDaysUntilExpiry(item.expiry_date);
+    return daysUntilExpiry != null && daysUntilExpiry < 0;
+  });
+}
+
+function compareExpiryDates(a, b) {
+  const aDays = getDaysUntilExpiry(a);
+  const bDays = getDaysUntilExpiry(b);
+
+  const aValue = aDays == null ? Number.POSITIVE_INFINITY : aDays;
+  const bValue = bDays == null ? Number.POSITIVE_INFINITY : bDays;
+
+  return aValue - bValue;
+}
+
+function asNumber(value) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function categorizeIngredientName(name) {
+  const normalized = String(name ?? '').toLowerCase();
+
+  if (!normalized) return 'other';
+
+  const matchAny = (keywords) => keywords.some((keyword) => normalized.includes(keyword));
+
+  if (matchAny(['apple', 'banana', 'orange', 'grape', 'berry', 'mango', 'pear', 'melon', 'pineapple', 'fruit'])) return 'fruits';
+  if (matchAny(['carrot', 'broccoli', 'spinach', 'lettuce', 'cucumber', 'pepper', 'onion', 'tomato', 'potato', 'vegetable', 'veggie'])) return 'vegetables';
+  if (matchAny(['milk', 'cheese', 'yogurt', 'butter', 'cream'])) return 'dairy';
+  if (matchAny(['juice', 'soda', 'water', 'coffee', 'tea', 'drink', 'beverage'])) return 'drinks';
+  if (matchAny(['chicken', 'beef', 'pork', 'fish', 'egg', 'tofu', 'turkey', 'protein'])) return 'protein';
+  if (matchAny(['rice', 'pasta', 'bread', 'oat', 'flour', 'grain', 'cereal'])) return 'grains';
+  if (matchAny(['salt', 'pepper', 'cumin', 'paprika', 'oregano', 'spice', 'herb'])) return 'spices';
+
+  return 'other';
+}
+
+function sortPantryItems(items, sortMode) {
+  const sorted = [...items];
+
+  switch (sortMode) {
+    case 'alpha-desc':
+      return sorted.sort((a, b) => String(b.ingredient?.name ?? '').localeCompare(String(a.ingredient?.name ?? '')));
+    case 'expires-soonest':
+      return sorted.sort((a, b) => compareExpiryDates(a.nextExpiry, b.nextExpiry));
+    case 'expires-latest':
+      return sorted.sort((a, b) => compareExpiryDates(b.nextExpiry, a.nextExpiry));
+    case 'added-latest':
+      return sorted.sort((a, b) => (b.latestEntryId ?? 0) - (a.latestEntryId ?? 0));
+    case 'highest-qty':
+      return sorted.sort((a, b) => (b.totalQuantity ?? 0) - (a.totalQuantity ?? 0));
+    case 'lowest-qty':
+      return sorted.sort((a, b) => (a.totalQuantity ?? 0) - (b.totalQuantity ?? 0));
+    case 'category-asc':
+      return sorted.sort((a, b) => {
+        const categoryCompare = String(a.category ?? '').localeCompare(String(b.category ?? ''));
+        if (categoryCompare !== 0) return categoryCompare;
+        return String(a.ingredient?.name ?? '').localeCompare(String(b.ingredient?.name ?? ''));
+      });
+    case 'alpha-asc':
+    default:
+      return sorted.sort((a, b) => String(a.ingredient?.name ?? '').localeCompare(String(b.ingredient?.name ?? '')));
+  }
+}
+
+function filterPantryItems(items, filterMode, categoryMode) {
+  const expiryFiltered = filterMode === 'all'
+    ? items
+    : items.filter((item) => getExpiryTone(item.nextExpiry).toLowerCase() === filterMode);
+
+  if (categoryMode === 'all') {
+    return expiryFiltered;
+  }
+
+  return expiryFiltered.filter((item) => item.category === categoryMode);
+}
+
+const SORT_OPTIONS = [
+  { label: 'Alphabetical (A-Z)', value: 'alpha-asc' },
+  { label: 'Alphabetical (Z-A)', value: 'alpha-desc' },
+  { label: 'Category (A-Z)', value: 'category-asc' },
+  { label: 'Expires soonest', value: 'expires-soonest' },
+  { label: 'Expires latest', value: 'expires-latest' },
+  { label: 'Added latest', value: 'added-latest' },
+  { label: 'Highest total quantity', value: 'highest-qty' },
+  { label: 'Lowest total quantity', value: 'lowest-qty' },
+];
+
+const FILTER_OPTIONS = [
+  { label: 'All', value: 'all' },
+  { label: 'Expiry (red)', value: 'red' },
+  { label: 'Expiry (yellow)', value: 'yellow' },
+  { label: 'Expiry (green)', value: 'green' },
+];
+
+const CATEGORY_OPTIONS = [
+  { label: 'All', value: 'all' },
+  { label: 'Fruits', value: 'fruits' },
+  { label: 'Vegetables', value: 'vegetables' },
+  { label: 'Dairy', value: 'dairy' },
+  { label: 'Drinks', value: 'drinks' },
+  { label: 'Protein', value: 'protein' },
+  { label: 'Grains', value: 'grains' },
+  { label: 'Spices', value: 'spices' },
+  { label: 'Other', value: 'other' },
+];
 
 function groupPantryItems(items) {
   const grouped = new Map();
@@ -48,14 +195,24 @@ function groupPantryItems(items) {
       .filter(Boolean)
       .sort();
 
+    const category = categorizeIngredientName(group.ingredient?.name);
+    const totalQuantity = group.entries.reduce((sum, entry) => sum + asNumber(entry.quantity), 0);
+    const latestEntryId = group.entries.reduce((maxId, entry) => {
+      const entryId = asNumber(entry.pantry_ingredient_id);
+      return entryId > maxId ? entryId : maxId;
+    }, 0);
+
     return {
       ...group,
       nextExpiry: expiryDates[0] ?? null,
+      category,
+      totalQuantity,
+      latestEntryId,
     };
   });
 }
 
-export default function PantryScreen({ session, onAdd }) {
+export default function PantryScreen({ session, onAdd, onMarkRanOut = null }) {
   const [pantry, setPantry] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -70,6 +227,60 @@ export default function PantryScreen({ session, onAdd }) {
   const [addUnit, setAddUnit] = useState('count');
   const [addExpiryDate, setAddExpiryDate] = useState(null);
   const [expandedIngredients, setExpandedIngredients] = useState({});
+  const [sortMode, setSortMode] = useState('alpha-asc');
+  const [filterMode, setFilterMode] = useState('all');
+  const [categoryMode, setCategoryMode] = useState('all');
+  const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
+  const lastExpiredAlertRef = useRef('');
+
+  const removeExpiredItems = async (expiredItems) => {
+    try {
+      await Promise.all(
+        expiredItems.map((item) => deletePantryItem(session.access_token, item.pantry_ingredient_id))
+      );
+
+      await fetchPantry(search, { quietSearch: true });
+    } catch (e) {
+      Alert.alert('Error', e.message || 'Failed to remove expired pantry items');
+    }
+  };
+
+  const maybeAlertExpiredItems = (items) => {
+    const expiredItems = getExpiredItems(items);
+
+    if (!expiredItems.length) {
+      lastExpiredAlertRef.current = '';
+      return;
+    }
+
+    const expiredKey = expiredItems
+      .map((item) => item.pantry_ingredient_id)
+      .sort()
+      .join(',');
+
+    if (lastExpiredAlertRef.current === expiredKey) {
+      return;
+    }
+
+    lastExpiredAlertRef.current = expiredKey;
+
+    const uniqueNames = [...new Set(expiredItems.map((item) => item.ingredient?.name ?? 'Unknown ingredient'))];
+    const preview = uniqueNames.slice(0, 3).join(', ');
+    const suffix = uniqueNames.length > 3 ? `, and ${uniqueNames.length - 3} more` : '';
+
+    Alert.alert(
+      'Expired pantry items',
+      `You have ${expiredItems.length} expired item${expiredItems.length === 1 ? '' : 's'}: ${preview}${suffix}.`,
+      [
+        { text: 'Later', style: 'cancel' },
+        {
+          text: 'Remove expired',
+          style: 'destructive',
+          onPress: () => removeExpiredItems(expiredItems),
+        },
+      ]
+    );
+  };
 
   const fetchPantry = async (q = '', { quietSearch = false } = {}) => {
     const busySetter = quietSearch ? setSearchLoading : setLoading;
@@ -78,6 +289,9 @@ export default function PantryScreen({ session, onAdd }) {
     try {
       const data = await getPantryItems(session.access_token, q);
       setPantry(data);
+      if (!quietSearch) {
+        maybeAlertExpiredItems(data);
+      }
     } catch (e) {
       setError(e.message);
     } finally {
@@ -183,7 +397,30 @@ export default function PantryScreen({ session, onAdd }) {
     }
   };
 
+  const markRanOut = async (entry) => {
+    try {
+      if (onMarkRanOut) {
+        await onMarkRanOut({
+          ingredient_id: entry.ingredient_id,
+          ingredient: entry.ingredient,
+          quantity: entry.quantity ?? 1,
+          unit: entry.unit ?? 'count',
+        });
+      }
+      Alert.alert('Added to shopping list', `${entry.ingredient?.name ?? 'Item'} was added to your shopping list.`);
+    } catch (e) {
+      Alert.alert('Error', e.message || 'Failed to add item to shopping list');
+    }
+  };
+
   const groupedPantry = groupPantryItems(pantry);
+  const visiblePantry = sortPantryItems(
+    filterPantryItems(groupedPantry, filterMode, categoryMode),
+    sortMode
+  );
+  const selectedSortOption = SORT_OPTIONS.find((option) => option.value === sortMode);
+  const selectedFilterOption = FILTER_OPTIONS.find((option) => option.value === filterMode);
+  const selectedCategoryOption = CATEGORY_OPTIONS.find((option) => option.value === categoryMode);
 
   const toggleExpanded = (ingredientId) => {
     setExpandedIngredients((current) => ({
@@ -199,6 +436,16 @@ export default function PantryScreen({ session, onAdd }) {
     <View style={styles.container}>
       <View style={styles.headerRow}>
         <Text style={styles.title}>Pantry</Text>
+        <TouchableOpacity
+          onPress={() => setIsFilterMenuOpen((current) => !current)}
+          accessibilityRole="button"
+          accessibilityLabel="Open sort and expiry filters"
+          hitSlop={{ top: 12, right: 12, bottom: 12, left: 12 }}
+          activeOpacity={0.75}
+          style={[styles.filterButton, isFilterMenuOpen && styles.filterButtonActive]}
+        >
+          <Ionicons name="funnel-outline" size={20} color={isFilterMenuOpen ? COLORS.primary : COLORS.textSecondary} />
+        </TouchableOpacity>
       </View>
 
       <SearchBar
@@ -210,15 +457,88 @@ export default function PantryScreen({ session, onAdd }) {
         }}
       />
 
+      <Text style={styles.filterSummary}>
+        Sort: {selectedSortOption?.label ?? 'Alphabetical (A-Z)'} | Expiry: {selectedFilterOption?.label ?? 'All'} | Category: {selectedCategoryOption?.label ?? 'All'}
+      </Text>
+
+      {isFilterMenuOpen ? (
+        <View style={styles.filterMenu}>
+          <ScrollView
+            style={styles.filterMenuScroll}
+            contentContainerStyle={styles.filterMenuContent}
+            showsVerticalScrollIndicator
+            nestedScrollEnabled
+          >
+            <Text style={styles.filterSectionTitle}>Sort by</Text>
+            {SORT_OPTIONS.map((option) => {
+              const active = sortMode === option.value;
+              return (
+                <TouchableOpacity
+                  key={option.value}
+                  onPress={() => setSortMode(option.value)}
+                  style={styles.filterOptionRow}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Sort by ${option.label}`}
+                >
+                  <Text style={[styles.filterOptionText, active && styles.filterOptionTextActive]}>{option.label}</Text>
+                  {active ? <Ionicons name="checkmark" size={18} color={COLORS.primary} /> : null}
+                </TouchableOpacity>
+              );
+            })}
+
+            <Text style={styles.filterSectionTitle}>Filter by expiry</Text>
+            {FILTER_OPTIONS.map((option) => {
+              const active = filterMode === option.value;
+              return (
+                <TouchableOpacity
+                  key={option.value}
+                  onPress={() => setFilterMode(option.value)}
+                  style={styles.filterOptionRow}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Filter by ${option.label}`}
+                >
+                  <Text style={[styles.filterOptionText, active && styles.filterOptionTextActive]}>{option.label}</Text>
+                  {active ? <Ionicons name="checkmark" size={18} color={COLORS.primary} /> : null}
+                </TouchableOpacity>
+              );
+            })}
+
+            <Text style={styles.filterSectionTitle}>Filter by category</Text>
+            {CATEGORY_OPTIONS.map((option) => {
+              const active = categoryMode === option.value;
+              return (
+                <TouchableOpacity
+                  key={option.value}
+                  onPress={() => setCategoryMode(option.value)}
+                  style={styles.filterOptionRow}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Filter category ${option.label}`}
+                >
+                  <Text style={[styles.filterOptionText, active && styles.filterOptionTextActive]}>{option.label}</Text>
+                  {active ? <Ionicons name="checkmark" size={18} color={COLORS.primary} /> : null}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      ) : null}
+
       {searchLoading && (
         <ActivityIndicator size="small" style={{ marginVertical: 8 }} />
       )}
 
       <FlatList
         style={styles.list}
-        data={groupedPantry}
+        data={visiblePantry}
         keyExtractor={(item) => String(item.ingredient_id)}
-        ListEmptyComponent={<Text style={styles.empty}>No pantry items found.</Text>}
+        ListEmptyComponent={
+          <Text style={styles.empty}>
+            {search || filterMode !== 'all'
+              || categoryMode !== 'all'
+              ? 'No pantry items match your current search or filters.'
+              : 'No pantry items found.'}
+          </Text>
+        }
         keyboardShouldPersistTaps="handled"
         renderItem={({ item }) => {
           const isExpanded = !!expandedIngredients[item.ingredient_id];
@@ -230,7 +550,12 @@ export default function PantryScreen({ session, onAdd }) {
               onPress={() => toggleExpanded(item.ingredient_id)}
               details={[
                 `${entryCount} ${entryCount === 1 ? 'entry' : 'entries'}`,
-                `next expiry: ${formatExpiry(item.nextExpiry)}`,
+                `category: ${item.category}`,
+                {
+                  text: `next expiry: ${formatExpiry(item.nextExpiry)} (${getExpiryLabel(item.nextExpiry)})`,
+                  iconName: 'ellipse',
+                  iconColor: getExpiryColor(item.nextExpiry),
+                },
               ]}
               actions={[
                 {
@@ -266,8 +591,8 @@ export default function PantryScreen({ session, onAdd }) {
                         <Text style={styles.groupEntryText}>
                           quantity: {entry.quantity ?? '-'} {entry.unit ?? '-'}
                         </Text>
-                        <Text style={styles.groupEntryText}>
-                          expiry: {formatExpiry(entry.expiry_date)}
+                        <Text style={[styles.groupEntryText, styles[`expiry${getExpiryTone(entry.expiry_date)}`]]}>
+                          expiry: {formatExpiry(entry.expiry_date)} ({getExpiryLabel(entry.expiry_date)})
                         </Text>
                       </View>
                       <View style={styles.groupEntryActions}>
@@ -286,6 +611,14 @@ export default function PantryScreen({ session, onAdd }) {
                           style={[styles.entryActionButton, styles.entryActionDanger]}
                         >
                           <Ionicons name="trash-outline" size={18} color={COLORS.danger} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={() => markRanOut(entry)}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Mark ${item.ingredient?.name ?? 'pantry item'} as ran out`}
+                          style={[styles.entryActionButton, styles.entryActionSuccess]}
+                        >
+                          <Ionicons name="cart-outline" size={18} color={COLORS.success} />
                         </TouchableOpacity>
                       </View>
                     </View>

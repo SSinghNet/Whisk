@@ -8,14 +8,79 @@ export default StyleSheet.create({
     backgroundColor: COLORS.surface,
   },
   headerRow: {
+    position: 'relative',
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: THEME.spacing.md,
+    minHeight: 44,
   },
   title: {
+    flex: 1,
+    paddingRight: THEME.spacing.lg,
     fontSize: THEME.typography.fontSize.xxxl,
     fontWeight: THEME.typography.fontWeight.bold,
     color: COLORS.text,
+  },
+  filterButton: {
+    width: 40,
+    height: 40,
+    borderRadius: THEME.sizing.radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.surface,
+    zIndex: 20,
+    elevation: 4,
+  },
+  filterButtonActive: {
+    backgroundColor: COLORS.primarySoft,
+    borderColor: COLORS.selectedBorder,
+  },
+  filterSummary: {
+    marginBottom: THEME.spacing.sm,
+    fontSize: THEME.typography.fontSize.sm,
+    color: COLORS.textSecondary,
+  },
+  filterMenu: {
+    marginBottom: THEME.spacing.md,
+    padding: THEME.spacing.md,
+    borderRadius: THEME.sizing.radius.lg,
+    backgroundColor: COLORS.surfaceMuted,
+    borderWidth: 1,
+    borderColor: COLORS.borderSoft,
+    maxHeight: 300,
+  },
+  filterMenuScroll: {
+    flexGrow: 0,
+  },
+  filterMenuContent: {
+    gap: THEME.spacing.xs,
+    paddingBottom: THEME.spacing.sm,
+  },
+  filterSectionTitle: {
+    marginTop: THEME.spacing.xs,
+    marginBottom: THEME.spacing.xs,
+    fontSize: THEME.typography.fontSize.sm,
+    fontWeight: THEME.typography.fontWeight.semibold,
+    color: COLORS.textSecondary,
+  },
+  filterOptionRow: {
+    minHeight: 40,
+    borderRadius: THEME.sizing.radius.md,
+    paddingHorizontal: THEME.spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  filterOptionText: {
+    fontSize: THEME.typography.fontSize.base,
+    color: COLORS.text,
+  },
+  filterOptionTextActive: {
+    color: COLORS.primary,
+    fontWeight: THEME.typography.fontWeight.semibold,
   },
   list: {
     flex: 1,
@@ -134,6 +199,18 @@ export default StyleSheet.create({
     fontSize: THEME.typography.fontSize.sm,
     lineHeight: 20,
   },
+  expiryGreen: {
+    color: COLORS.expirationGreen,
+    fontWeight: THEME.typography.fontWeight.semibold,
+  },
+  expiryYellow: {
+    color: COLORS.expirationYellow,
+    fontWeight: THEME.typography.fontWeight.semibold,
+  },
+  expiryRed: {
+    color: COLORS.expirationRed,
+    fontWeight: THEME.typography.fontWeight.semibold,
+  },
   groupEntryActions: {
     flexDirection: 'row',
     gap: THEME.spacing.xs,
@@ -148,11 +225,15 @@ export default StyleSheet.create({
   },
   entryActionPrimary: {
     backgroundColor: COLORS.primarySoft,
-    borderColor: 'rgba(79, 70, 229, 0.22)',
+    borderColor: COLORS.primaryAccentBorder,
   },
   entryActionDanger: {
     backgroundColor: COLORS.dangerSoft,
-    borderColor: 'rgba(220, 38, 38, 0.2)',
+    borderColor: COLORS.dangerAccentBorder,
+  },
+  entryActionSuccess: {
+    backgroundColor: COLORS.successSoft,
+    borderColor: COLORS.successAccentBorder,
   },
   fab: {
     position: 'absolute',
