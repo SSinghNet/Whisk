@@ -35,6 +35,7 @@ const fetchJson = async (path, { method = 'GET', token, body } = {}) => {
 };
 
 export const getRecipes = (token) => fetchJson('/recipe', { token });
+export const createRecipe = (token, payload) => fetchJson('/recipe', { method: 'POST', token, body: payload });
 export const getUserRecipes = (token, query = '') =>
   fetchJson(`/recipe/user${query ? `?search=${encodeURIComponent(query)}` : ''}`, { token });
 export const getRecipe = (token, id) => fetchJson(`/recipe/${id}`, { token });

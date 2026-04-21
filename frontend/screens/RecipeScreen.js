@@ -15,7 +15,7 @@ import { getUserRecipes, removeRecipeFromUser } from '../lib/api';
 import styles from '../styles/RecipeScreen.styles';
 import { Alert } from 'react-native';
 
-export default function RecipeScreen({ session, onOpenBrowse, onSelectRecipe }) {
+export default function RecipeScreen({ session, onOpenBrowse, onCreateRecipe, onSelectRecipe }) {
   const [recipes, setRecipes] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -112,8 +112,14 @@ export default function RecipeScreen({ session, onOpenBrowse, onSelectRecipe }) 
       )}
 
       <FloatingActionButton
-        onPress={onOpenBrowse}
-        accessibilityLabel="Browse recipes to add"
+        onPress={() =>
+          Alert.alert('Add Recipe', null, [
+            { text: 'Create Custom Recipe', onPress: onCreateRecipe },
+            { text: 'Browse Recipes', onPress: onOpenBrowse },
+            { text: 'Cancel', style: 'cancel' },
+          ])
+        }
+        accessibilityLabel="Add recipe"
       />
     </View>
   );
