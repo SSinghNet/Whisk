@@ -148,6 +148,7 @@ CREATE TABLE IF NOT EXISTS recipe (
   image_url    TEXT,
   yield_amount NUMERIC(10,3),
   yield_unit   unit_code,
+  is_private   BOOLEAN       NOT NULL DEFAULT false,
   created_at   TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
   CONSTRAINT fk_recipe_user
     FOREIGN KEY (user_id) REFERENCES app_user(user_id) ON DELETE CASCADE,

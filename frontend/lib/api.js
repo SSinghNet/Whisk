@@ -5,7 +5,7 @@ console.log(host);
 export const API_URL =
   process.env.EXPO_PUBLIC_APP_ENV === 'production'
     ? 'https://whisk-lznv.onrender.com'
-    : `http://${host}:3000`;
+    : `http://${host}:3001`;
 
 const handleResponse = async (res) => {
   if (res.ok) return res.status === 204 ? null : res.json();
@@ -35,6 +35,7 @@ const fetchJson = async (path, { method = 'GET', token, body } = {}) => {
 };
 
 export const getRecipes = (token) => fetchJson('/recipe', { token });
+export const createRecipe = (token, payload) => fetchJson('/recipe', { method: 'POST', token, body: payload });
 export const getUserRecipes = (token, query = '') =>
   fetchJson(`/recipe/user${query ? `?search=${encodeURIComponent(query)}` : ''}`, { token });
 export const getRecipe = (token, id) => fetchJson(`/recipe/${id}`, { token });
@@ -67,3 +68,9 @@ export const lookupBarcode = (token, barcode) => fetchJson(`/product/${barcode}`
 export const getIngredients = (token) => fetchJson('/ingredient', { token });
 export const deleteIngredient = (token, id) => fetchJson(`/ingredient/${id}`, { method: 'DELETE', token });
 export const updateIngredient = (token, id, name) => fetchJson(`/ingredient/${id}`, { method: 'PATCH', token, body: { name: name.trim() } });
+
+export const searchEdamamRecipes = (token, query, from = 0) =>
+  fetchJson(`/recipe/edamam?q=${encodeURIComponent(query)}&from=${from}`, { token });
+
+export const importEdamamRecipe = (token, payload) =>
+  fetchJson('/recipe/edamam/import', { method: 'POST', token, body: payload });

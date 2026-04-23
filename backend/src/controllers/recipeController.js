@@ -1,4 +1,5 @@
 import * as service from "../services/recipeService.js"
+import * as edamam from "../services/edamamService.js"
 
 export const getRecipes = async (req, res) => {
     const search = req.query.search || null
@@ -40,19 +41,22 @@ export const getRecipe = async (req, res) => {
 }
 
 export const createRecipe = async (req, res) => {
-    const { title, instructions, image_url, yield_amount, yield_unit } = req.body || {}
+    const supabase_uid = req.user.id
+    const { title, instructions, image_url, yield_amount, yield_unit, is_private, ingredients } = req.body || {}
 
     if (!title) {
         return res.status(400).json({ message: "title is required" })
     }
 
     try {
-        const recipe = await service.createRecipe({
+        const recipe = await service.createRecipe(supabase_uid, {
             title,
             instructions,
             image_url,
             yield_amount,
             yield_unit,
+            is_private: is_private ?? false,
+            ingredients: ingredients || [],
         })
 
         res.status(201).json(recipe)
@@ -153,6 +157,62 @@ export const removeRecipeFromUser = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: error.message || 'Internal server error' })
     }
+}
+
+export const searchEdamam = async (req, res) => {
+  const query = req.query.q || ''
+  const from = parseInt(req.query.from || '0', 10)
+
+  if (!query.trim()) return res.status(200).json([])
+
+  try {
+    const recipes = await edamam.searchRecipes(query, from)
+    res.status(200).json(recipes)
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Failed to search recipes' })
+  }
+}
+
+const VALID_UNITS = new Set(['count','gram','ounce','pound','milliliter','liter','gallon','cup','tablespoon','teaspoon'])
+
+const sanitizeUnit = (unit) => {
+  if (!unit) return 'count'
+  const lower = unit.toLowerCase().trim()
+  if (VALID_UNITS.has(lower)) return lower
+  // common Edamam aliases
+  const map = { tsp: 'teaspoon', tbsp: 'tablespoon', tablespoons: 'tablespoon', teaspoons: 'teaspoon',
+    cups: 'cup', grams: 'gram', ounces: 'ounce', pounds: 'pound',
+    milliliters: 'milliliter', liters: 'liter', gallons: 'gallon' }
+  return map[lower] || 'count'
+}
+
+export const importEdamam = async (req, res) => {
+  const supabase_uid = req.user.id
+  const { title, image_url, yield_amount, ingredients } = req.body || {}
+
+  if (!title) return res.status(400).json({ message: 'title is required' })
+
+  const sanitizedIngredients = (ingredients || [])
+    .filter((ing) => ing.name?.trim())
+    .map((ing) => ({ ...ing, unit: sanitizeUnit(ing.unit) }))
+
+  const parsedYield = yield_amount ? Number(yield_amount) : null
+  const resolvedYieldUnit = parsedYield ? 'count' : null
+
+  try {
+    const recipe = await service.createRecipe(supabase_uid, {
+      title,
+      image_url: image_url || null,
+      instructions: null,
+      yield_amount: parsedYield,
+      yield_unit: resolvedYieldUnit,
+      is_private: false,
+      ingredients: sanitizedIngredients,
+    })
+    res.status(201).json(recipe)
+  } catch (error) {
+    res.status(500).json({ message: error.message || 'Internal server error' })
+  }
 }
 
 export const makeRecipe = async (req, res) => {

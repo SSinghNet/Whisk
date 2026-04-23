@@ -11,6 +11,7 @@ import AddPantryIngredientScreen from './screens/AddPantryIngredientScreen';
 import ShoppingListScreen from './screens/ShoppingListScreen';
 import RecipeScreen from './screens/RecipeScreen';
 import BrowseRecipesScreen from './screens/BrowseRecipesScreen';
+import CreateRecipeScreen from './screens/CreateRecipeScreen';
 import RecipeDetailScreen from './screens/RecipeDetailScreen';
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
@@ -28,6 +29,7 @@ export default function App() {
 
     const [selectedRecipe, setSelectedRecipe] = useState(null);
     const [browsingRecipes, setBrowsingRecipes] = useState(false);
+    const [creatingRecipe, setCreatingRecipe] = useState(false);
     const [activeScreen, setActiveScreen] = useState('pantry');
     const [addIngredient, setAddIngredient] = useState(null);
     const [shoppingListItems, setShoppingListItems] = useState([]);
@@ -150,6 +152,7 @@ export default function App() {
         setSession(null);
         setSelectedRecipe(null);
         setBrowsingRecipes(false);
+        setCreatingRecipe(false);
         setActiveScreen('pantry');
         setShoppingListItems([]);
     }
@@ -167,6 +170,12 @@ export default function App() {
                             session={session}
                             allowAddToList={browsingRecipes}
                         />
+                    ) : creatingRecipe ? (
+                        <CreateRecipeScreen
+                            session={session}
+                            onCreated={() => setCreatingRecipe(false)}
+                            onCancel={() => setCreatingRecipe(false)}
+                        />
                     ) : browsingRecipes ? (
                         <BrowseRecipesScreen
                             session={session}
@@ -177,6 +186,7 @@ export default function App() {
                         <RecipeScreen
                             session={session}
                             onOpenBrowse={() => setBrowsingRecipes(true)}
+                            onCreateRecipe={() => setCreatingRecipe(true)}
                             onSelectRecipe={setSelectedRecipe}
                         />
                     )}

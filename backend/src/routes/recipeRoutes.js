@@ -9,10 +9,14 @@ import {
     addRecipeToUser,
     removeRecipeFromUser,
     makeRecipe,
+    searchEdamam,
+    importEdamam,
 } from "../controllers/recipeController.js"
 
 const router = Router()
 
+router.get('/edamam', searchEdamam)
+router.post('/edamam/import', importEdamam)
 router.get('/', getRecipes)
 router.get('/user', getUserRecipes)
 router.get('/:id', getRecipe)
