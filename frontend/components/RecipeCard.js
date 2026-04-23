@@ -18,6 +18,8 @@ export default function RecipeCard({
   selected = false,
   onPress,
   actions = [],
+  badge,
+  statusColor,
   style,
 }) {
   return (
@@ -27,9 +29,17 @@ export default function RecipeCard({
       activeOpacity={onPress ? 0.7 : 1}
       disabled={!onPress}
     >
+      {statusColor && <View style={[cardStyles.statusBar, { backgroundColor: statusColor }]} />}
       <View style={cardStyles.cardTopRow}>
         <View style={cardStyles.main}>
-          <Text style={cardStyles.title}>{title}</Text>
+          <View style={cardStyles.titleRow}>
+            <Text style={[cardStyles.title, badge && { flex: 1 }]}>{title}</Text>
+            {badge && (
+              <View style={[cardStyles.badge, { backgroundColor: badge.color + '18', borderColor: badge.color + '40' }]}>
+                <Text style={[cardStyles.badgeText, { color: badge.color }]}>{badge.label}</Text>
+              </View>
+            )}
+          </View>
           {details.map((detail, index) => (
             <Text style={cardStyles.detail} key={index}>{detail}</Text>
           ))}

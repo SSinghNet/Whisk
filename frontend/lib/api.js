@@ -70,3 +70,6 @@ export const searchEdamamRecipes = (token, query, from = 0) =>
 
 export const importEdamamRecipe = (token, payload) =>
   fetchJson('/recipe/edamam/import', { method: 'POST', token, body: payload });
+
+export const getRecommendations = (token) =>
+  fetchJson('/recommendations', { method: 'POST', token });

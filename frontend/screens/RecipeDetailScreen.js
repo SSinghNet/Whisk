@@ -63,8 +63,8 @@ export default function RecipeDetailScreen({
 
   useEffect(() => {
     setRecipeDetail(recipe);
-    if (!recipe?.edamam_id) loadRecipe();
-  }, [recipe?.recipe_id, recipe?.edamam_id]);
+    if (!recipe?.edamam_id && !recipe?.ai_suggestion) loadRecipe();
+  }, [recipe?.recipe_id, recipe?.edamam_id, recipe?.ai_suggestion]);
 
   const handleImportEdamam = () => {
     Alert.alert('Add Recipe', 'Save this recipe to your list?', [
@@ -148,6 +148,7 @@ export default function RecipeDetailScreen({
 
   const currentRecipe = recipeDetail || recipe;
   const isExternal = !!currentRecipe?.edamam_id;
+  const isAiSuggestion = !!currentRecipe?.ai_suggestion;
   const summary = currentRecipe?.pantry_status_summary;
 
   return (
@@ -164,6 +165,12 @@ export default function RecipeDetailScreen({
       <ErrorMessage message={error} />
 
       {loading ? <LoadingSpinner /> : null}
+
+      {isAiSuggestion && (
+        <View style={styles.aiBadge}>
+          <Text style={styles.aiBadgeText}>✦ AI Generated</Text>
+        </View>
+      )}
 
       {isExternal && currentRecipe.image_url && (
         <Image
@@ -190,7 +197,16 @@ export default function RecipeDetailScreen({
         </View>
       )}
 
-      {isExternal && currentRecipe.ingredient_lines?.length > 0 && (
+      {isAiSuggestion && currentRecipe.ingredients?.length > 0 && (
+        <View style={styles.sectionBlock}>
+          <Text style={styles.sectionLabel}>Ingredients</Text>
+          {currentRecipe.ingredients.map((line, i) => (
+            <Text key={i} style={styles.ingredientLine}>· {line}</Text>
+          ))}
+        </View>
+      )}
+
+      {isExternal && !isAiSuggestion && currentRecipe.ingredient_lines?.length > 0 && (
         <View style={styles.sectionBlock}>
           <Text style={styles.sectionLabel}>Ingredients</Text>
           {currentRecipe.ingredient_lines.map((line, i) => (
@@ -219,7 +235,42 @@ export default function RecipeDetailScreen({
         </View>
       )}
 
-      {isExternal ? (
+      {isAiSuggestion ? (
+        <AppButton
+          title="Save to my recipes"
+          onPress={() => {
+            Alert.alert('Save Recipe', 'Save this AI-generated recipe to your list?', [
+              { text: 'Cancel', style: 'cancel' },
+              {
+                text: 'Save',
+                onPress: async () => {
+                  setActionLoading(true);
+                  try {
+                    await importEdamamRecipe(session.access_token, {
+                      title: currentRecipe.title,
+                      image_url: null,
+                      yield_amount: null,
+                      ingredients: (currentRecipe.ingredients || []).map((ing) => ({
+                        name: ing,
+                        amount: null,
+                        unit: null,
+                      })),
+                    });
+                    Alert.alert('Saved!', 'Recipe added to your list.');
+                  } catch (e) {
+                    Alert.alert('Error', e.message);
+                  } finally {
+                    setActionLoading(false);
+                  }
+                },
+              },
+            ]);
+          }}
+          loading={actionLoading}
+          disabled={actionLoading}
+          style={styles.recipeActionButton}
+        />
+      ) : isExternal ? (
         <AppButton
           title="Add to my recipes"
           onPress={handleImportEdamam}
