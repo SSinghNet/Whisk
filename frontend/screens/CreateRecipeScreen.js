@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity, ScrollView, Switch, Alert, ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
-import { createRecipe } from '../lib/api';
+import { createRecipe, getPantryItems } from '../lib/api';
 import { COLORS } from '../styles/colors';
 import styles from '../styles/CreateRecipeScreen.styles';
 
@@ -20,6 +20,30 @@ export default function CreateRecipeScreen({ session, onCreated, onCancel }) {
   const [isPrivate, setIsPrivate] = useState(false);
   const [ingredients, setIngredients] = useState([emptyIngredient()]);
   const [saving, setSaving] = useState(false);
+  const [pantryItems, setPantryItems] = useState([]);
+
+  useEffect(() => {
+    getPantryItems(session.access_token)
+      .then((data) => setPantryItems(Array.isArray(data) ? data : []))
+      .catch(() => {});
+  }, []);
+
+  const pantryNameSet = useMemo(() => {
+    const set = new Set();
+    for (const item of pantryItems) {
+      if (item.ingredient?.name) set.add(item.ingredient.name.toLowerCase().trim());
+    }
+    return set;
+  }, [pantryItems]);
+
+  const getPantryStatus = (name) => {
+    const trimmed = name.trim().toLowerCase();
+    if (!trimmed) return null;
+    for (const pantryName of pantryNameSet) {
+      if (pantryName.includes(trimmed) || trimmed.includes(pantryName)) return 'found';
+    }
+    return 'missing';
+  };
 
   const addIngredient = () => setIngredients((prev) => [...prev, emptyIngredient()]);
 
@@ -115,45 +139,75 @@ export default function CreateRecipeScreen({ session, onCreated, onCancel }) {
 
         <Text style={styles.sectionTitle}>Ingredients</Text>
 
-        {ingredients.map((ing, index) => (
-          <View key={index} style={styles.ingredientRow}>
-            <TextInput
-              style={[styles.input, styles.ingredientName]}
-              placeholder="Name"
-              placeholderTextColor={COLORS.placeholder}
-              value={ing.name}
-              onChangeText={(v) => updateIngredient(index, 'name', v)}
-            />
-            <TextInput
-              style={[styles.input, styles.ingredientAmount]}
-              placeholder="Amt"
-              placeholderTextColor={COLORS.placeholder}
-              keyboardType="numeric"
-              value={ing.amount}
-              onChangeText={(v) => updateIngredient(index, 'amount', v)}
-            />
-            <View style={styles.pickerWrapper}>
-              <Picker
-                selectedValue={ing.unit}
-                onValueChange={(v) => updateIngredient(index, 'unit', v)}
-                style={styles.picker}
-              >
-                {UNIT_OPTIONS.map((u) => (
-                  <Picker.Item key={u} label={u} value={u} />
-                ))}
-              </Picker>
+        {ingredients.map((ing, index) => {
+          const status = getPantryStatus(ing.name);
+          return (
+            <View
+              key={index}
+              style={[
+                styles.ingredientCard,
+                status === 'found' && styles.ingredientCardFound,
+                status === 'missing' && styles.ingredientCardMissing,
+              ]}
+            >
+              <View style={styles.ingredientCardHeader}>
+                <TextInput
+                  style={[styles.input, styles.ingredientCardName]}
+                  placeholder="Ingredient name"
+                  placeholderTextColor={COLORS.placeholder}
+                  value={ing.name}
+                  onChangeText={(v) => updateIngredient(index, 'name', v)}
+                />
+                <View style={styles.ingredientStatusBadge}>
+                  {status === 'found' && (
+                    <View style={[styles.statusPill, styles.statusPillFound]}>
+                      <Ionicons name="checkmark-circle" size={14} color={COLORS.success} />
+                      <Text style={[styles.statusPillText, { color: COLORS.success }]}>In pantry</Text>
+                    </View>
+                  )}
+                  {status === 'missing' && (
+                    <View style={[styles.statusPill, styles.statusPillMissing]}>
+                      <Ionicons name="close-circle-outline" size={14} color={COLORS.warning} />
+                      <Text style={[styles.statusPillText, { color: COLORS.warning }]}>Not in pantry</Text>
+                    </View>
+                  )}
+                </View>
+                {ingredients.length > 1 && (
+                  <TouchableOpacity
+                    onPress={() => removeIngredient(index)}
+                    accessibilityRole="button"
+                    accessibilityLabel="Remove ingredient"
+                    style={styles.removeBtn}
+                  >
+                    <Ionicons name="trash-outline" size={18} color={COLORS.danger} />
+                  </TouchableOpacity>
+                )}
+              </View>
+
+              <View style={styles.ingredientCardAmounts}>
+                <TextInput
+                  style={[styles.input, styles.ingredientAmountInput]}
+                  placeholder="Amount"
+                  placeholderTextColor={COLORS.placeholder}
+                  keyboardType="numeric"
+                  value={ing.amount}
+                  onChangeText={(v) => updateIngredient(index, 'amount', v)}
+                />
+                <View style={styles.pickerWrapper}>
+                  <Picker
+                    selectedValue={ing.unit}
+                    onValueChange={(v) => updateIngredient(index, 'unit', v)}
+                    style={styles.picker}
+                  >
+                    {UNIT_OPTIONS.map((u) => (
+                      <Picker.Item key={u} label={u} value={u} />
+                    ))}
+                  </Picker>
+                </View>
+              </View>
             </View>
-            {ingredients.length > 1 && (
-              <TouchableOpacity
-                onPress={() => removeIngredient(index)}
-                accessibilityRole="button"
-                accessibilityLabel="Remove ingredient"
-              >
-                <Ionicons name="remove-circle-outline" size={24} color={COLORS.danger} />
-              </TouchableOpacity>
-            )}
-          </View>
-        ))}
+          );
+        })}
 
         <TouchableOpacity style={styles.addIngredientButton} onPress={addIngredient}>
           <Ionicons name="add-circle-outline" size={20} color={COLORS.primary} />

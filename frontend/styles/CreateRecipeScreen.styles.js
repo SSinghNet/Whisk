@@ -73,22 +73,67 @@ export default StyleSheet.create({
     marginTop: THEME.spacing.lg,
     marginBottom: THEME.spacing.sm,
   },
-  ingredientRow: {
+  ingredientCard: {
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    borderRadius: THEME.sizing.radius.lg,
+    padding: THEME.spacing.md,
+    marginBottom: THEME.spacing.md,
+    backgroundColor: COLORS.surfaceMuted,
+  },
+  ingredientCardFound: {
+    borderColor: COLORS.success,
+    backgroundColor: COLORS.successSoft,
+  },
+  ingredientCardMissing: {
+    borderColor: COLORS.border,
+    backgroundColor: COLORS.surface,
+  },
+  ingredientCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: THEME.spacing.sm,
     marginBottom: THEME.spacing.sm,
   },
-  ingredientName: {
-    flex: 2,
+  ingredientCardName: {
+    flex: 1,
     marginBottom: 0,
   },
-  ingredientAmount: {
+  ingredientStatusBadge: {
+    flexShrink: 0,
+  },
+  statusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: THEME.spacing.sm,
+    paddingVertical: 3,
+    borderRadius: THEME.sizing.radius.full,
+  },
+  statusPillFound: {
+    backgroundColor: COLORS.successSoft,
+  },
+  statusPillMissing: {
+    backgroundColor: COLORS.warningSoft,
+  },
+  statusPillText: {
+    fontSize: THEME.typography.fontSize.xs,
+    fontWeight: THEME.typography.fontWeight.medium,
+  },
+  removeBtn: {
+    padding: THEME.spacing.xs,
+  },
+  ingredientCardAmounts: {
+    flexDirection: 'row',
+    gap: THEME.spacing.sm,
+    alignItems: 'center',
+  },
+  ingredientAmountInput: {
     flex: 1,
     marginBottom: 0,
   },
   pickerWrapper: {
-    flex: 1.5,
+    flex: 2,
     borderWidth: 1,
     borderColor: COLORS.border,
     borderRadius: THEME.sizing.radius.md,

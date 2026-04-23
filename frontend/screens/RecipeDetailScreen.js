@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ScrollView, View, Text, TouchableOpacity, Alert } from 'react-native';
+import { ScrollView, View, Text, TouchableOpacity, Alert, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import AppButton from '../components/AppButton';
 import ErrorMessage from '../components/ErrorMessage';
@@ -8,7 +8,7 @@ import RecipeMissingSummary from '../components/RecipeMissingSummary';
 import RecipeIngredientStatusCard from '../components/RecipeIngredientStatusCard';
 import styles from '../styles/RecipeScreen.styles';
 import { COLORS } from '../styles/colors';
-import { addRecipeToUser, getRecipe, makeRecipe } from '../lib/api';
+import { addRecipeToUser, getRecipe, makeRecipe, importEdamamRecipe } from '../lib/api';
 
 const STATUS_CONFIG = {
   missing: {
@@ -63,8 +63,38 @@ export default function RecipeDetailScreen({
 
   useEffect(() => {
     setRecipeDetail(recipe);
-    loadRecipe();
-  }, [recipe?.recipe_id]);
+    if (!recipe?.edamam_id) loadRecipe();
+  }, [recipe?.recipe_id, recipe?.edamam_id]);
+
+  const handleImportEdamam = () => {
+    Alert.alert('Add Recipe', 'Save this recipe to your list?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Add',
+        onPress: async () => {
+          setActionLoading(true);
+          try {
+            await importEdamamRecipe(session.access_token, {
+              title: currentRecipe.title,
+              image_url: currentRecipe.image_url,
+              yield_amount: currentRecipe.yield_amount,
+              yield_unit: null,
+              ingredients: (currentRecipe.recipe_ingredient || []).map((ing) => ({
+                name: ing.ingredient?.name || '',
+                amount: ing.amount,
+                unit: ing.unit,
+              })),
+            });
+            Alert.alert('Added!', 'Recipe saved to your list.');
+          } catch (e) {
+            Alert.alert('Error', e.message);
+          } finally {
+            setActionLoading(false);
+          }
+        },
+      },
+    ]);
+  };
 
   const handleAddToList = () => {
     Alert.alert('Add Recipe', 'Add this recipe to your saved recipes?', [
@@ -117,6 +147,7 @@ export default function RecipeDetailScreen({
   };
 
   const currentRecipe = recipeDetail || recipe;
+  const isExternal = !!currentRecipe?.edamam_id;
   const summary = currentRecipe?.pantry_status_summary;
 
   return (
@@ -134,9 +165,21 @@ export default function RecipeDetailScreen({
 
       {loading ? <LoadingSpinner /> : null}
 
+      {isExternal && currentRecipe.image_url && (
+        <Image
+          source={{ uri: currentRecipe.image_url }}
+          style={styles.heroImage}
+          resizeMode="cover"
+        />
+      )}
+
       <Text style={styles.recipeName}>{currentRecipe.title}</Text>
 
-      <RecipeMissingSummary summary={summary} statusConfig={STATUS_CONFIG} />
+      {isExternal && currentRecipe.source && (
+        <Text style={styles.recipeSource}>from {currentRecipe.source}</Text>
+      )}
+
+      {!isExternal && <RecipeMissingSummary summary={summary} statusConfig={STATUS_CONFIG} />}
 
       {currentRecipe.yield_amount && (
         <View style={styles.sectionBlock}>
@@ -147,7 +190,16 @@ export default function RecipeDetailScreen({
         </View>
       )}
 
-      {currentRecipe.recipe_ingredient && currentRecipe.recipe_ingredient.length > 0 && (
+      {isExternal && currentRecipe.ingredient_lines?.length > 0 && (
+        <View style={styles.sectionBlock}>
+          <Text style={styles.sectionLabel}>Ingredients</Text>
+          {currentRecipe.ingredient_lines.map((line, i) => (
+            <Text key={i} style={styles.ingredientLine}>· {line}</Text>
+          ))}
+        </View>
+      )}
+
+      {!isExternal && currentRecipe.recipe_ingredient?.length > 0 && (
         <View style={styles.sectionBlock}>
           <Text style={styles.sectionLabel}>Ingredients</Text>
           {currentRecipe.recipe_ingredient.map((ing) => (
@@ -167,21 +219,32 @@ export default function RecipeDetailScreen({
         </View>
       )}
 
-      <AppButton
-        title="Make Recipe"
-        onPress={handleMakeRecipe}
-        disabled={actionLoading || !summary?.can_make_recipe}
-        loading={actionLoading}
-        style={styles.recipeActionButton}
-      />
-
-      {allowAddToList && session ? (
+      {isExternal ? (
         <AppButton
           title="Add to my recipes"
-          onPress={handleAddToList}
+          onPress={handleImportEdamam}
+          loading={actionLoading}
+          disabled={actionLoading}
           style={styles.recipeActionButton}
         />
-      ) : null}
+      ) : (
+        <>
+          <AppButton
+            title="Make Recipe"
+            onPress={handleMakeRecipe}
+            disabled={actionLoading || !summary?.can_make_recipe}
+            loading={actionLoading}
+            style={styles.recipeActionButton}
+          />
+          {allowAddToList && session ? (
+            <AppButton
+              title="Add to my recipes"
+              onPress={handleAddToList}
+              style={styles.recipeActionButton}
+            />
+          ) : null}
+        </>
+      )}
     </ScrollView>
   );
 }

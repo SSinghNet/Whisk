@@ -189,6 +189,24 @@ export default StyleSheet.create({
     color: COLORS.text,
     lineHeight: 20,
   },
+  heroImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: THEME.sizing.radius.xl,
+    marginBottom: THEME.spacing.lg,
+  },
+  recipeSource: {
+    fontSize: THEME.typography.fontSize.sm,
+    color: COLORS.textMuted,
+    marginTop: -THEME.spacing.sm,
+    marginBottom: THEME.spacing.md,
+  },
+  ingredientLine: {
+    fontSize: THEME.typography.fontSize.base,
+    color: COLORS.text,
+    lineHeight: 22,
+    paddingVertical: 2,
+  },
   recipeActionButton: {
     marginTop: THEME.spacing.sm,
   },
