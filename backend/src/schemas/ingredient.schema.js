@@ -6,8 +6,8 @@ const idParam = z.object({ id: z.string().regex(/^[0-9]+$/) })
 export const IngredientResponseSchema = registry.register(
   'IngredientResponse',
   z.object({
-    ingredient_id: z.number(),
-    name: z.string(),
+    ingredient_id: z.number().positive(),
+    name: z.string().min(1).max(100),
     created_at: z.iso.datetime(),
   })
 )
@@ -20,6 +20,7 @@ export const IngredientCreateSchema = registry.register(
       .min(1, 'Name cannot be empty')
       .max(100, 'Name cannot exceed 100 characters')
       .trim()
+      .regex(/^[a-zA-Z\s]+$/, 'Name can only contain letters and spaces')
       .toLowerCase(),
   })
 )
