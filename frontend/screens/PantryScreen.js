@@ -335,24 +335,32 @@ export default function PantryScreen({ session, onAdd, onMarkRanOut = null }) {
 
   const saveEdit = async () => {
     if (!editingItem) return;
+
     const quantityValue = Number(editQuantity);
-    if (Number.isNaN(quantityValue) || quantityValue < 1) {
-      Alert.alert('Validation', 'Quantity must be a number greater than 0');
+    if (Number.isNaN(quantityValue) || quantityValue <= 0) {
+      Alert.alert('Invalid quantity', 'Quantity must be greater than 0');
+      return;
+    }
+    if (quantityValue > 9999.99) {
+      Alert.alert('Invalid quantity', 'Quantity cannot exceed 9999.99');
+      return;
+    }
+    const roundedQuantity = Math.round(quantityValue * 100) / 100;
+    if (roundedQuantity !== quantityValue) {
+      Alert.alert('Invalid quantity', 'Quantity cannot have more than 2 decimal places');
       return;
     }
 
-    const payload = {
-      quantity: quantityValue,
-      unit: editUnit,
-      expiry_date: editExpiryDate ? editExpiryDate.toISOString().split('T')[0] : null,
-    };
-
     try {
-      await updatePantryItem(session.access_token, editingItem.pantry_ingredient_id, payload);
+      await updatePantryItem(session.access_token, editingItem.pantry_ingredient_id, {
+        quantity: roundedQuantity,
+        unit: editUnit,
+        expiry_date: editExpiryDate ? editExpiryDate.toISOString().split('T')[0] : null,
+      });
       cancelEdit();
       await fetchPantry(search, { quietSearch: true });
     } catch (e) {
-      Alert.alert('Error', e.message || 'Update failed');
+      Alert.alert('Error', 'Failed to update pantry item. Please try again');
     }
   };
 
@@ -374,15 +382,24 @@ export default function PantryScreen({ session, onAdd, onMarkRanOut = null }) {
     if (!addingIngredient) return;
 
     const quantityValue = Number(addQuantity);
-    if (Number.isNaN(quantityValue) || quantityValue < 1) {
-      Alert.alert('Validation', 'Quantity must be a number greater than 0');
+    if (Number.isNaN(quantityValue) || quantityValue <= 0) {
+      Alert.alert('Invalid quantity', 'Quantity must be greater than 0');
+      return;
+    }
+    if (quantityValue > 9999.99) {
+      Alert.alert('Invalid quantity', 'Quantity cannot exceed 9999.99');
+      return;
+    }
+    const roundedQuantity = Math.round(quantityValue * 100) / 100;
+    if (roundedQuantity !== quantityValue) {
+      Alert.alert('Invalid quantity', 'Quantity cannot have more than 2 decimal places');
       return;
     }
 
     try {
       await addPantryItem(session.access_token, {
         ingredient_id: addingIngredient.ingredient_id,
-        quantity: quantityValue,
+        quantity: roundedQuantity,
         unit: addUnit,
         expiry_date: addExpiryDate ? addExpiryDate.toISOString().split('T')[0] : null,
       });
@@ -393,7 +410,7 @@ export default function PantryScreen({ session, onAdd, onMarkRanOut = null }) {
       }));
       await fetchPantry(search, { quietSearch: true });
     } catch (e) {
-      Alert.alert('Error', e.message || 'Failed to add pantry entry');
+      Alert.alert('Error', 'Failed to add pantry entry. Please try again');
     }
   };
 
