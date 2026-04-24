@@ -168,21 +168,36 @@ export const getUserRecipes = async (supabaseUid, search) => {
     const user_id = await resolveUserId(supabaseUid)
 
     const where = {
-        user_recipe: {
-            some: {
-                user_id,
-            },
-        },
-        ...(search ? {
-            title: { contains: search, mode: 'insensitive' },
-        } : {}),
+        user_recipe: { some: { user_id } },
+        ...(search ? { title: { contains: search, mode: 'insensitive' } } : {}),
     }
 
-    return await prisma.recipe.findMany({
-        where,
-        include: recipeInclude,
-        orderBy: { created_at: 'desc' },
-    })
+    const recipes = await prisma.recipe.findMany({ where, include: recipeInclude })
+
+    if (!recipes.length) return []
+
+    // Fetch all relevant pantry items in one query across all recipes
+    const allIngredientIds = [...new Set(
+        recipes.flatMap((r) => r.recipe_ingredient.map((ri) => Number(ri.ingredient_id)))
+    )]
+
+    const pantryItems = allIngredientIds.length > 0
+        ? await prisma.pantry_ingredient.findMany({
+            where: { user_id, ingredient_id: { in: allIngredientIds } },
+            orderBy: [{ expiry_date: 'asc' }, { pantry_ingredient_id: 'asc' }],
+        })
+        : []
+
+    // Build availability for each recipe then sort green → red
+    return recipes
+        .map((recipe) => buildRecipeAvailability(recipe, pantryItems))
+        .sort((a, b) => {
+            const aTotal = a.recipe_ingredient.length
+            const bTotal = b.recipe_ingredient.length
+            const aRatio = aTotal > 0 ? a.pantry_status_summary.available_count / aTotal : 0
+            const bRatio = bTotal > 0 ? b.pantry_status_summary.available_count / bTotal : 0
+            return bRatio - aRatio
+        })
 }
 
 export const getRecipe = async (supabaseUid, recipeId) => {

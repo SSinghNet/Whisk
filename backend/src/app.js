@@ -11,6 +11,7 @@ import userRoutes from './routes/userRoutes.js'
 import ingredientRoutes from './routes/ingredientRoutes.js'
 import pantryRoutes from './routes/pantryRoutes.js'
 import productRoutes from './routes/productRoutes.js'
+import recommendationRoutes from './routes/recommendationRoutes.js'
 import shoppingListRoutes from './routes/shoppingListRoutes.js'
 
 const app = express()
@@ -29,6 +30,7 @@ app.use('/recipe', auth, recipeRoutes)
 app.use('/users', auth, userRoutes)
 app.use('/pantry', auth, pantryRoutes)
 app.use('/product', auth, productRoutes)
+app.use('/recommendations', auth, recommendationRoutes)
 app.use('/shopping-list', auth, shoppingListRoutes)
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(generateOpenAPIDocument()))

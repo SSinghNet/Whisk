@@ -207,6 +207,21 @@ export default StyleSheet.create({
     lineHeight: 22,
     paddingVertical: 2,
   },
+  aiBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: COLORS.primarySoft,
+    borderRadius: THEME.sizing.radius.full,
+    paddingHorizontal: THEME.spacing.md,
+    paddingVertical: THEME.spacing.xs,
+    marginBottom: THEME.spacing.md,
+    borderWidth: 1,
+    borderColor: COLORS.selectedBorder,
+  },
+  aiBadgeText: {
+    fontSize: THEME.typography.fontSize.xs,
+    fontWeight: THEME.typography.fontWeight.semibold,
+    color: COLORS.primary,
+  },
   recipeActionButton: {
     marginTop: THEME.spacing.sm,
   },
