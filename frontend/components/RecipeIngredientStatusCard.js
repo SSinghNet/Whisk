@@ -1,6 +1,7 @@
-import { View, Text } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import styles from '../styles/RecipeScreen.styles';
+import { COLORS } from '../styles/colors';
 
 const formatAmount = (quantity, unit) => {
   if (quantity == null) {
@@ -10,7 +11,7 @@ const formatAmount = (quantity, unit) => {
   return unit ? `${quantity} ${unit}` : `${quantity}`;
 };
 
-export default function RecipeIngredientStatusCard({ ingredient, statusConfig }) {
+export default function RecipeIngredientStatusCard({ ingredient, statusConfig, onAddToShoppingList = null }) {
   const pantryStatus = ingredient.pantry_status || {};
   const config = statusConfig[pantryStatus.status] || statusConfig.missing;
   const pantryItems = pantryStatus.pantry_items || [];
@@ -43,6 +44,18 @@ export default function RecipeIngredientStatusCard({ ingredient, statusConfig })
           ) : (
             <Text style={styles.pantryItemText}>Have: not in pantry</Text>
           )}
+
+          {onAddToShoppingList ? (
+            <TouchableOpacity
+              onPress={onAddToShoppingList}
+              style={styles.ingredientActionButton}
+              accessibilityRole="button"
+              accessibilityLabel={`Add ${ingredient.ingredient.name} to shopping list`}
+            >
+              <Ionicons name="cart-outline" size={14} color={COLORS.primary} />
+              <Text style={styles.ingredientActionButtonText}>Add to shopping list</Text>
+            </TouchableOpacity>
+          ) : null}
         </View>
       </View>
     </View>

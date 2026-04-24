@@ -169,6 +169,7 @@ export default function App() {
                             onBack={() => setSelectedRecipe(null)}
                             session={session}
                             allowAddToList={browsingRecipes}
+                            onAddIngredientToShoppingList={addItemToShoppingList}
                         />
                     ) : creatingRecipe ? (
                         <CreateRecipeScreen
@@ -241,47 +242,47 @@ export default function App() {
                 </View>
             )}
 
-            {!['recipes','pantry','ingredients','addPantry','scan','shoppingList','profile'].includes(activeScreen) && (
+            {!['recipes', 'pantry', 'ingredients', 'addPantry', 'scan', 'shoppingList', 'profile'].includes(activeScreen) && (
                 <View style={styles.center}><Text>Unknown screen: {activeScreen}</Text></View>
             )}
 
             <View style={styles.bottomNav}>
-                <TouchableOpacity 
-                    onPress={() => setActiveScreen('pantry')} 
+                <TouchableOpacity
+                    onPress={() => setActiveScreen('pantry')}
                     style={[styles.bottomNavButton, activeScreen === 'pantry' && styles.bottomNavActive]}
                 >
-                    <MaterialCommunityIcons 
-                        name="basket" 
-                        size={24} 
+                    <MaterialCommunityIcons
+                        name="basket"
+                        size={24}
                         color={activeScreen === 'pantry' ? COLORS.primary : COLORS.textMuted}
                     />
                     <Text style={[styles.bottomNavText, activeScreen === 'pantry' && styles.bottomNavTextActive]}>Pantry</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity 
-                    onPress={() => setActiveScreen('scan')} 
-                    style={[styles.bottomNavButton, activeScreen === 'scan' && styles.bottomNavActive]}
-                >
-                    <MaterialCommunityIcons 
-                        name="camera" 
-                        size={24} 
-                        color={activeScreen === 'scan' ? COLORS.primary : COLORS.textMuted}
-                    />
-                    <Text style={[styles.bottomNavText, activeScreen === 'scan' && styles.bottomNavTextActive]}>Scan</Text>
-                </TouchableOpacity>
 
-                <TouchableOpacity 
-                    onPress={() => setActiveScreen('shoppingList')} 
+                <TouchableOpacity
+                    onPress={() => setActiveScreen('shoppingList')}
                     style={[styles.bottomNavButton, activeScreen === 'shoppingList' && styles.bottomNavActive]}
                 >
-                    <MaterialCommunityIcons 
-                        name="cart-outline" 
-                        size={24} 
+                    <MaterialCommunityIcons
+                        name="cart-outline"
+                        size={24}
                         color={activeScreen === 'shoppingList' ? COLORS.primary : COLORS.textMuted}
                     />
                     <Text style={[styles.bottomNavText, activeScreen === 'shoppingList' && styles.bottomNavTextActive]}>Shopping</Text>
                 </TouchableOpacity>
 
+                <TouchableOpacity
+                    onPress={() => setActiveScreen('scan')}
+                    style={[styles.bottomNavButton, activeScreen === 'scan' && styles.bottomNavActive]}
+                >
+                    <MaterialCommunityIcons
+                        name="camera"
+                        size={24}
+                        color={activeScreen === 'scan' ? COLORS.primary : COLORS.textMuted}
+                    />
+                    <Text style={[styles.bottomNavText, activeScreen === 'scan' && styles.bottomNavTextActive]}>Scan</Text>
+                </TouchableOpacity>
                 <TouchableOpacity
                     onPress={() => { setActiveScreen('recipes'); setBrowsingRecipes(false); setSelectedRecipe(null); }}
                     style={[styles.bottomNavButton, activeScreen === 'recipes' && styles.bottomNavActive]}
@@ -306,8 +307,7 @@ export default function App() {
                     <Text style={[styles.bottomNavText, activeScreen === 'profile' && styles.bottomNavTextActive]}>Profile</Text>
                 </TouchableOpacity>
             </View>
-            </SafeAreaView>
+        </SafeAreaView>
     );
 }
-
 

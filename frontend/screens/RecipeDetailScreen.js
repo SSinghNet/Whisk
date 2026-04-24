@@ -30,11 +30,50 @@ const STATUS_CONFIG = {
 
 const getRecipeId = (recipe) => recipe?.recipe_id;
 
+const formatYield = (recipe) => {
+  if (!recipe?.yield_amount) return null;
+  return [recipe.yield_amount, recipe.yield_unit && recipe.yield_unit !== 'count' ? recipe.yield_unit : null]
+    .filter(Boolean)
+    .join(' ');
+};
+
+const getAiIngredientLine = (ingredient) => {
+  if (typeof ingredient === 'string') return ingredient;
+  if (ingredient?.display) return ingredient.display;
+
+  const amount = ingredient?.amount != null ? String(ingredient.amount) : null;
+  const unit = ingredient?.unit && ingredient.unit !== 'count' ? ingredient.unit : null;
+  return [amount, unit, ingredient?.name].filter(Boolean).join(' ');
+};
+
+const getMakeRecipeErrorMessage = (error, summary) => {
+  if (!summary?.make_recipe_blockers?.length) {
+    return error.message;
+  }
+
+  const missingAmounts = summary.make_recipe_blockers.filter((item) => item.reason === 'missing_amount');
+  if (missingAmounts.length) {
+    const names = missingAmounts.map((item) => item.name).join(', ');
+    return `This recipe is missing ingredient amounts for: ${names}. Add amounts before making it.`;
+  }
+
+  return error.message;
+};
+
+const shouldDisableMakeRecipe = (summary) => {
+  if (!summary?.make_recipe_blockers?.length) {
+    return false;
+  }
+
+  return summary.make_recipe_blockers.some((item) => item.reason !== 'missing_amount');
+};
+
 export default function RecipeDetailScreen({
   recipe,
   onBack,
   session,
   allowAddToList = false,
+  onAddIngredientToShoppingList = null,
 }) {
   const [recipeDetail, setRecipeDetail] = useState(recipe);
   const [loading, setLoading] = useState(false);
@@ -63,8 +102,10 @@ export default function RecipeDetailScreen({
 
   useEffect(() => {
     setRecipeDetail(recipe);
-    if (!recipe?.edamam_id && !recipe?.ai_suggestion) loadRecipe();
-  }, [recipe?.recipe_id, recipe?.edamam_id, recipe?.ai_suggestion]);
+    if (!recipe?.edamam_id && !recipe?.ai_suggestion && recipe?.recipe_id) {
+      loadRecipe();
+    }
+  }, [recipe?.recipe_id, recipe?.edamam_id, recipe?.ai_suggestion, recipe?.pantry_status_summary]);
 
   const handleImportEdamam = () => {
     Alert.alert('Add Recipe', 'Save this recipe to your list?', [
@@ -77,8 +118,9 @@ export default function RecipeDetailScreen({
             await importEdamamRecipe(session.access_token, {
               title: currentRecipe.title,
               image_url: currentRecipe.image_url,
+              instructions: currentRecipe.instructions,
               yield_amount: currentRecipe.yield_amount,
-              yield_unit: null,
+              yield_unit: currentRecipe.yield_unit,
               ingredients: (currentRecipe.recipe_ingredient || []).map((ing) => ({
                 name: ing.ingredient?.name || '',
                 amount: ing.amount,
@@ -131,11 +173,14 @@ export default function RecipeDetailScreen({
             setError(null);
 
             try {
-              const updatedRecipe = await makeRecipe(session.access_token, getRecipeId(recipe));
+              const updatedRecipe = await makeRecipe(session.access_token, getRecipeId(currentRecipe));
               setRecipeDetail(updatedRecipe);
               Alert.alert('Success', 'Pantry ingredients were deducted for this recipe.');
             } catch (e) {
-              Alert.alert('Unable to make recipe', e.message);
+              Alert.alert(
+                'Unable to make recipe',
+                getMakeRecipeErrorMessage(e, e.details || currentRecipe?.pantry_status_summary)
+              );
               await loadRecipe();
             } finally {
               setActionLoading(false);
@@ -146,10 +191,32 @@ export default function RecipeDetailScreen({
     );
   };
 
+  const handleAddIngredientToShoppingList = async (ingredient) => {
+    if (!onAddIngredientToShoppingList) {
+      return;
+    }
+
+    try {
+      await onAddIngredientToShoppingList({
+        ingredient_id: ingredient.ingredient_id,
+        ingredient: ingredient.ingredient,
+        quantity: ingredient.amount ?? 1,
+        unit: ingredient.unit ?? 'count',
+      });
+      Alert.alert(
+        'Added to shopping list',
+        `${ingredient.ingredient?.name ?? 'Ingredient'} was added to your shopping list.`
+      );
+    } catch (e) {
+      Alert.alert('Error', e.message || 'Failed to add ingredient to shopping list');
+    }
+  };
+
   const currentRecipe = recipeDetail || recipe;
   const isExternal = !!currentRecipe?.edamam_id;
   const isAiSuggestion = !!currentRecipe?.ai_suggestion;
   const summary = currentRecipe?.pantry_status_summary;
+  const makeRecipeDisabled = actionLoading || shouldDisableMakeRecipe(summary);
 
   return (
     <ScrollView style={styles.detailContainer} contentContainerStyle={styles.detailScrollContent}>
@@ -188,12 +255,10 @@ export default function RecipeDetailScreen({
 
       {!isExternal && <RecipeMissingSummary summary={summary} statusConfig={STATUS_CONFIG} />}
 
-      {currentRecipe.yield_amount && (
+      {formatYield(currentRecipe) && (
         <View style={styles.sectionBlock}>
           <Text style={styles.sectionLabel}>Yield</Text>
-          <Text style={styles.instructions}>
-            {currentRecipe.yield_amount} {currentRecipe.yield_unit || ''}
-          </Text>
+          <Text style={styles.instructions}>{formatYield(currentRecipe)}</Text>
         </View>
       )}
 
@@ -201,7 +266,7 @@ export default function RecipeDetailScreen({
         <View style={styles.sectionBlock}>
           <Text style={styles.sectionLabel}>Ingredients</Text>
           {currentRecipe.ingredients.map((line, i) => (
-            <Text key={i} style={styles.ingredientLine}>· {line}</Text>
+            <Text key={i} style={styles.ingredientLine}>· {getAiIngredientLine(line)}</Text>
           ))}
         </View>
       )}
@@ -223,6 +288,7 @@ export default function RecipeDetailScreen({
               key={ing.ingredient_id}
               ingredient={ing}
               statusConfig={STATUS_CONFIG}
+              onAddToShoppingList={() => handleAddIngredientToShoppingList(ing)}
             />
           ))}
         </View>
@@ -249,11 +315,13 @@ export default function RecipeDetailScreen({
                     await importEdamamRecipe(session.access_token, {
                       title: currentRecipe.title,
                       image_url: null,
-                      yield_amount: null,
+                      instructions: currentRecipe.instructions,
+                      yield_amount: currentRecipe.yield_amount,
+                      yield_unit: currentRecipe.yield_unit,
                       ingredients: (currentRecipe.ingredients || []).map((ing) => ({
-                        name: ing,
-                        amount: null,
-                        unit: null,
+                        name: typeof ing === 'string' ? ing : ing.name,
+                        amount: typeof ing === 'string' ? null : ing.amount,
+                        unit: typeof ing === 'string' ? 'count' : ing.unit,
                       })),
                     });
                     Alert.alert('Saved!', 'Recipe added to your list.');
@@ -283,7 +351,7 @@ export default function RecipeDetailScreen({
           <AppButton
             title="Make Recipe"
             onPress={handleMakeRecipe}
-            disabled={actionLoading || !summary?.can_make_recipe}
+            disabled={makeRecipeDisabled}
             loading={actionLoading}
             style={styles.recipeActionButton}
           />

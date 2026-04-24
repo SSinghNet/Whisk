@@ -188,7 +188,7 @@ const sanitizeUnit = (unit) => {
 
 export const importEdamam = async (req, res) => {
   const supabase_uid = req.user.id
-  const { title, image_url, yield_amount, ingredients } = req.body || {}
+  const { title, image_url, instructions, yield_amount, yield_unit, ingredients } = req.body || {}
 
   if (!title) return res.status(400).json({ message: 'title is required' })
 
@@ -197,13 +197,13 @@ export const importEdamam = async (req, res) => {
     .map((ing) => ({ ...ing, unit: sanitizeUnit(ing.unit) }))
 
   const parsedYield = yield_amount ? Number(yield_amount) : null
-  const resolvedYieldUnit = parsedYield ? 'count' : null
+  const resolvedYieldUnit = parsedYield ? sanitizeUnit(yield_unit) : null
 
   try {
     const recipe = await service.createRecipe(supabase_uid, {
       title,
       image_url: image_url || null,
-      instructions: null,
+      instructions: instructions || null,
       yield_amount: parsedYield,
       yield_unit: resolvedYieldUnit,
       is_private: false,

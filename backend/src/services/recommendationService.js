@@ -2,6 +2,102 @@ import { getPantry } from './pantryService.js'
 
 const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions'
 const GROQ_MODEL = 'llama-3.3-70b-versatile'
+const VALID_UNITS = new Set([
+  'count',
+  'gram',
+  'ounce',
+  'pound',
+  'milliliter',
+  'liter',
+  'gallon',
+  'cup',
+  'tablespoon',
+  'teaspoon',
+])
+
+const UNIT_ALIASES = {
+  tsp: 'teaspoon',
+  tsps: 'teaspoon',
+  teaspoon: 'teaspoon',
+  teaspoons: 'teaspoon',
+  tbsp: 'tablespoon',
+  tbsps: 'tablespoon',
+  tablespoon: 'tablespoon',
+  tablespoons: 'tablespoon',
+  cups: 'cup',
+  grams: 'gram',
+  ounces: 'ounce',
+  pounds: 'pound',
+  milliliters: 'milliliter',
+  liters: 'liter',
+  gallons: 'gallon',
+  servings: 'count',
+  serving: 'count',
+}
+
+const sanitizeUnit = (unit) => {
+  if (!unit) return 'count'
+  const normalized = String(unit).toLowerCase().trim()
+  if (VALID_UNITS.has(normalized)) return normalized
+  return UNIT_ALIASES[normalized] || 'count'
+}
+
+const formatIngredientLine = (ingredient) => {
+  if (typeof ingredient === 'string') return ingredient.trim()
+
+  const amount = ingredient?.amount != null && ingredient.amount !== ''
+    ? String(ingredient.amount).trim()
+    : null
+  const unit = ingredient?.unit ? sanitizeUnit(ingredient.unit) : null
+  const name = ingredient?.name ? String(ingredient.name).trim() : ''
+
+  return [amount, unit && unit !== 'count' ? unit : null, name].filter(Boolean).join(' ').trim()
+}
+
+const normalizeIngredient = (ingredient) => {
+  if (typeof ingredient === 'string') {
+    return {
+      name: ingredient.trim(),
+      amount: null,
+      unit: 'count',
+      display: ingredient.trim(),
+    }
+  }
+
+  const name = ingredient?.name ? String(ingredient.name).trim() : ''
+  const amount = ingredient?.amount == null || ingredient.amount === ''
+    ? null
+    : Number(ingredient.amount)
+  const unit = sanitizeUnit(ingredient?.unit)
+  const display = ingredient?.display
+    ? String(ingredient.display).trim()
+    : formatIngredientLine({ name, amount, unit })
+
+  return {
+    name,
+    amount: Number.isFinite(amount) ? amount : null,
+    unit,
+    display: display || name,
+  }
+}
+
+const normalizeRecommendation = (recipe) => {
+  const ingredients = Array.isArray(recipe?.ingredients)
+    ? recipe.ingredients.map(normalizeIngredient).filter((ingredient) => ingredient.name)
+    : []
+
+  const yieldAmount = recipe?.yield_amount == null || recipe.yield_amount === ''
+    ? null
+    : Number(recipe.yield_amount)
+
+  return {
+    title: recipe?.title ? String(recipe.title).trim() : 'Untitled recipe',
+    ingredients,
+    instructions: recipe?.instructions ? String(recipe.instructions).trim() : null,
+    yield_amount: Number.isFinite(yieldAmount) ? yieldAmount : null,
+    yield_unit: yieldAmount ? sanitizeUnit(recipe?.yield_unit) : null,
+  }
+}
 
 const buildPrompt = (pantryItems) => {
   const now = new Date()
@@ -43,7 +139,16 @@ Format:
 [
   {
     "title": "Recipe Name",
-    "ingredients": ["ingredient 1", "ingredient 2"],
+    "yield_amount": 4,
+    "yield_unit": "count",
+    "ingredients": [
+      {
+        "name": "ingredient 1",
+        "amount": 2,
+        "unit": "cup",
+        "display": "2 cup ingredient 1"
+      }
+    ],
     "instructions": "Step by step instructions as a single string."
   }
 ]`
@@ -82,7 +187,7 @@ export const getRecommendations = async (supabaseUid) => {
 
   try {
     const parsed = JSON.parse(cleaned)
-    return Array.isArray(parsed) ? parsed : []
+    return Array.isArray(parsed) ? parsed.map(normalizeRecommendation) : []
   } catch {
     throw new Error('Failed to parse recipe suggestions from Groq response')
   }

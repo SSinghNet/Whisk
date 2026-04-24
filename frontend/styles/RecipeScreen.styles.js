@@ -184,6 +184,23 @@ export default StyleSheet.create({
     color: COLORS.textSecondary,
     lineHeight: 16,
   },
+  ingredientActionButton: {
+    marginTop: THEME.spacing.sm,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: THEME.spacing.xs,
+    paddingVertical: THEME.spacing.xs,
+    paddingHorizontal: THEME.spacing.sm,
+    borderRadius: THEME.sizing.radius.full,
+    borderWidth: 1,
+    borderColor: COLORS.selectedBorder,
+    backgroundColor: COLORS.primarySoft,
+  },
+  ingredientActionButtonText: {
+    fontSize: THEME.typography.fontSize.xs,
+    color: COLORS.primary,
+    fontWeight: THEME.typography.fontWeight.semibold,
+  },
   instructions: {
     fontSize: THEME.typography.fontSize.base,
     color: COLORS.text,

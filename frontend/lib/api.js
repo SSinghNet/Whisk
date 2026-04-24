@@ -5,7 +5,7 @@ console.log(host);
 export const API_URL =
   process.env.EXPO_PUBLIC_APP_ENV === 'production'
     ? 'https://whisk-lznv.onrender.com'
-    : `http://${host}:3001`;
+    : `http://${host}:3000`;
 
 const handleResponse = async (res) => {
   if (res.ok) return res.status === 204 ? null : res.json();
