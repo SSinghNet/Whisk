@@ -4,36 +4,61 @@ import { IngredientResponseSchema } from './ingredient.schema.js'
 import { UnitCode } from './shared.schema.js'
 
 export const PantryIngredientResponseSchema = registry.register(
-  'PantryIngredient',
+  'PantryIngredientResponse',
   z.object({
-    pantry_ingredient_id: z.number(),
-    user_id: z.number(),
-    ingredient_id: z.number(),
+    pantry_ingredient_id: z.number().positive(),
+    user_id: z.number().positive(),
+    ingredient_id: z.number().positive(),
     ingredient: IngredientResponseSchema,
-    quantity: z.number().nullable().optional(),
-    unit: UnitCode.optional().nullable(),
+    quantity: z.number().positive(),
+    unit: UnitCode,
     expiry_date: z.iso.date().optional().nullable(),
   })
 )
 
-export const PantryIngredientCreateSchema = z.object({
-  ingredient_id: z.number(),
-  quantity: z.number().optional(),
-  unit: UnitCode.optional(),
-  expiry_date: z.iso.date().optional(),
-})
+export const PantryIngredientCreateSchema = registry.register(
+  'PantryIngredientCreate',
+  z.object({
+    ingredient_id: z.coerce
+      .number({ required_error: 'Ingredient is required', invalid_type_error: 'Ingredient ID must be a number' })
+      .int('Ingredient ID must be an integer')
+      .positive('Ingredient ID must be a positive number'),
+    quantity: z.coerce
+      .number({ required_error: 'Quantity is required', invalid_type_error: 'Quantity must be a number' })
+      .positive('Quantity must be greater than 0')
+      .max(9999.99, 'Quantity cannot exceed 9999.99')
+      .multipleOf(0.01, 'Quantity cannot have more than 2 decimal places'),
+    unit: UnitCode,
+    expiry_date: z.iso.date().optional().nullable(),
+  })
+)
 
-export const PantryIngredientUpdateSchema = z.object({
-  quantity: z.number().optional(),
-  unit: UnitCode.optional(),
-  expiry_date: z.iso.date().optional(),
-})
+export const PantryIngredientUpdateSchema = registry.register(
+  'PantryIngredientUpdate',
+  z.object({
+  quantity: z.coerce
+    .number({ required_error: 'Quantity is required', invalid_type_error: 'Quantity must be a number' })
+    .positive('Quantity must be greater than 0')
+    .max(9999.99, 'Quantity cannot exceed 9999.99')
+    .multipleOf(0.01, 'Quantity cannot have more than 2 decimal places')
+    .optional().nullable(),
+    unit: UnitCode.optional().nullable(),
+    expiry_date: z.iso.date({ error: 'Invalid date format' }).optional().nullable(),
+  }).refine(
+    ({ quantity, unit, expiry_date }) => quantity !== undefined || unit !== undefined || expiry_date !== undefined,
+    { message: 'At least one field (quantity, unit, expiry_date) is required' }
+  )
+)
+
 
 registry.registerPath({
   method: 'get',
   path: '/pantry',
   summary: 'List pantry ingredients',
   tags: ['Pantry'],
+  request: {
+    query: z.object({ search: z.string().optional() }),
+  },
   responses: {
     200: {
       description: 'Pantry list',

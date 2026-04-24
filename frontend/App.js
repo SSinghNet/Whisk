@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
-    StatusBar,
+    Alert, StatusBar,
     Text, TouchableOpacity, View, SafeAreaView
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -8,6 +8,7 @@ import IngredientForm from './screens/IngredientForm';
 import BarcodeScannerScreen from './screens/BarcodeScannerScreen';
 import PantryScreen from './screens/PantryScreen';
 import AddPantryIngredientScreen from './screens/AddPantryIngredientScreen';
+import ShoppingListScreen from './screens/ShoppingListScreen';
 import RecipeScreen from './screens/RecipeScreen';
 import BrowseRecipesScreen from './screens/BrowseRecipesScreen';
 import CreateRecipeScreen from './screens/CreateRecipeScreen';
@@ -16,7 +17,7 @@ import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
 import UserProfileScreen from './screens/UserProfileScreen';
 import { supabase } from './lib/supabase';
-import { createUserRecord } from './lib/api';
+import { addPantryItem, addShoppingListItem, createUserRecord, deleteShoppingListItem, getShoppingList } from './lib/api';
 import styles from './styles/App.styles';
 import { COLORS } from './styles/colors';
 
@@ -31,6 +32,50 @@ export default function App() {
     const [creatingRecipe, setCreatingRecipe] = useState(false);
     const [activeScreen, setActiveScreen] = useState('pantry');
     const [addIngredient, setAddIngredient] = useState(null);
+    const [shoppingListItems, setShoppingListItems] = useState([]);
+
+    async function refreshShoppingList(currentSession = session) {
+        if (!currentSession?.access_token) return;
+
+        const data = await getShoppingList(currentSession.access_token);
+        setShoppingListItems(Array.isArray(data) ? data : []);
+    }
+
+    async function addItemToShoppingList(item) {
+        await addShoppingListItem(session.access_token, {
+            ingredient_id: item.ingredient_id,
+            quantity: item.quantity ?? 1,
+            unit: item.unit ?? 'count',
+        });
+        await refreshShoppingList(session);
+    }
+
+    async function removeShoppingListItemByIngredient(ingredientId) {
+        await deleteShoppingListItem(session.access_token, ingredientId);
+        await refreshShoppingList(session);
+    }
+
+    async function moveShoppingListItemToPantry(item, pantryData = {}) {
+        await addPantryItem(session.access_token, {
+            ingredient_id: item.ingredient_id,
+            quantity: pantryData.quantity ?? item.quantity ?? 1,
+            unit: pantryData.unit ?? item.unit ?? 'count',
+            expiry_date: pantryData.expiry_date ?? null,
+        });
+        await deleteShoppingListItem(session.access_token, item.ingredient_id);
+        await refreshShoppingList(session);
+    }
+
+    useEffect(() => {
+        if (!session?.access_token) {
+            setShoppingListItems([]);
+            return;
+        }
+
+        refreshShoppingList(session).catch((error) => {
+            Alert.alert('Error', error.message || 'Failed to load shopping list');
+        });
+    }, [session]);
 
     async function handleLogin(formData) {
         setAuthLoading(true);
@@ -109,10 +154,11 @@ export default function App() {
         setBrowsingRecipes(false);
         setCreatingRecipe(false);
         setActiveScreen('pantry');
+        setShoppingListItems([]);
     }
 
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
             <StatusBar barStyle='dark-content' />
 
             {activeScreen === 'recipes' && (
@@ -153,6 +199,7 @@ export default function App() {
                         session={session}
                         onAdd={() => setActiveScreen('addPantry')}
                         onBack={() => setActiveScreen('recipes')}
+                        onMarkRanOut={addItemToShoppingList}
                     />
                 </View>
             )}
@@ -164,6 +211,15 @@ export default function App() {
                         initialIngredient={addIngredient}
                         onAdded={() => { setAddIngredient(null); setActiveScreen('pantry'); }}
                         onCancel={() => { setAddIngredient(null); setActiveScreen('pantry'); }}
+                    />
+                </View>
+            )}
+            {activeScreen === 'shoppingList' && (
+                <View style={styles.mainContent}>
+                    <ShoppingListScreen
+                        items={shoppingListItems}
+                        onRemoveItem={removeShoppingListItemByIngredient}
+                        onMoveToPantry={moveShoppingListItemToPantry}
                     />
                 </View>
             )}
@@ -185,7 +241,7 @@ export default function App() {
                 </View>
             )}
 
-            {!['recipes','pantry','ingredients','addPantry','scan','profile'].includes(activeScreen) && (
+            {!['recipes','pantry','ingredients','addPantry','scan','shoppingList','profile'].includes(activeScreen) && (
                 <View style={styles.center}><Text>Unknown screen: {activeScreen}</Text></View>
             )}
 
@@ -212,6 +268,18 @@ export default function App() {
                         color={activeScreen === 'scan' ? COLORS.primary : COLORS.textMuted}
                     />
                     <Text style={[styles.bottomNavText, activeScreen === 'scan' && styles.bottomNavTextActive]}>Scan</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                    onPress={() => setActiveScreen('shoppingList')} 
+                    style={[styles.bottomNavButton, activeScreen === 'shoppingList' && styles.bottomNavActive]}
+                >
+                    <MaterialCommunityIcons 
+                        name="cart-outline" 
+                        size={24} 
+                        color={activeScreen === 'shoppingList' ? COLORS.primary : COLORS.textMuted}
+                    />
+                    <Text style={[styles.bottomNavText, activeScreen === 'shoppingList' && styles.bottomNavTextActive]}>Shopping</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity

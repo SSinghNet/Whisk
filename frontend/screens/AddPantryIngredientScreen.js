@@ -45,16 +45,30 @@ export default function AddPantryIngredientScreen({ session, onAdded, onCancel, 
       Alert.alert('Select ingredient first');
       return;
     }
+
     const quantityValue = Number(quantity);
-    if (Number.isNaN(quantityValue) || quantityValue < 1) {
-      Alert.alert('Quantity must be a number greater than 0');
+
+    if (Number.isNaN(quantityValue) || quantityValue <= 0) {
+      Alert.alert('Invalid quantity', 'Quantity must be greater than 0');
+      return;
+    }
+
+    if (quantityValue > 9999.99) {
+      Alert.alert('Invalid quantity', 'Quantity cannot exceed 9999.99');
+      return;
+    }
+
+    // round to 2 decimal places to avoid floating point issues
+    const roundedQuantity = Math.round(quantityValue * 100) / 100;
+    if (roundedQuantity !== quantityValue) {
+      Alert.alert('Invalid quantity', 'Quantity cannot have more than 2 decimal places');
       return;
     }
 
     try {
       await addPantryItem(session.access_token, {
         ingredient_id: selected.ingredient_id,
-        quantity: Number(quantity),
+        quantity: roundedQuantity,
         unit,
         expiry_date: expiry_date ? expiry_date.toISOString().split('T')[0] : null,
       });

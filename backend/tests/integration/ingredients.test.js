@@ -12,16 +12,6 @@ describe('Ingredient routes', () => {
     token = login.token;
   });
 
-  beforeEach(async () => {
-    // Only clean up ingredients created by this test suite
-    if (createdIds.length) {
-      await prisma.ingredient.deleteMany({
-        where: { ingredient_id: { in: createdIds } },
-      });
-    }
-    createdIds = [];
-  });
-
   afterEach(async () => {
     for (const id of createdIds) {
       await prisma.ingredient.deleteMany({
@@ -49,12 +39,15 @@ describe('Ingredient routes', () => {
     return res.body;
   }
 
+  // ---------------------------------------------------------------------------
+  // POST /ingredient
+  // ---------------------------------------------------------------------------
   describe('POST /ingredient', () => {
-    test('creates an ingredient', async () => {
+    test('creates an ingredient and normalizes name to lowercase', async () => {
       const res = await request(app)
         .post('/ingredient')
         .set('Authorization', `Bearer ${token}`)
-        .send({ name: 'rice' });
+        .send({ name: 'Rice' });
 
       expect(res.statusCode).toBe(201);
       expect(res.body).toHaveProperty('ingredient_id');
@@ -70,12 +63,22 @@ describe('Ingredient routes', () => {
         .send({});
 
       expect(res.statusCode).toBe(400);
-      expect(res.body).toEqual({
-        message: 'Name is required',
-      });
+      expect(res.body.message).toBe('Invalid request body');
+      expect(res.body.errors.fieldErrors.name).toContain('Invalid input: expected string, received undefined');
+    });
+
+    test('returns 401 when no token is provided', async () => {
+      const res = await request(app)
+        .post('/ingredient')
+        .send({ name: 'rice' });
+
+      expect(res.statusCode).toBe(401);
     });
   });
 
+  // ---------------------------------------------------------------------------
+  // GET /ingredient
+  // ---------------------------------------------------------------------------
   describe('GET /ingredient', () => {
     test('returns empty array when no ingredients exist', async () => {
       const res = await request(app)
@@ -110,10 +113,19 @@ describe('Ingredient routes', () => {
 
       expect(res.statusCode).toBe(200);
       expect(res.body.length).toBe(1);
-      expect(res.body[0].name.toLowerCase()).toContain('rice');
+      expect(res.body[0].name).toContain('rice');
+    });
+
+    test('returns 401 when no token is provided', async () => {
+      const res = await request(app).get('/ingredient');
+
+      expect(res.statusCode).toBe(401);
     });
   });
 
+  // ---------------------------------------------------------------------------
+  // GET /ingredient/:id
+  // ---------------------------------------------------------------------------
   describe('GET /ingredient/:id', () => {
     test('returns one ingredient', async () => {
       const ingredient = await createIngredient('milk');
@@ -133,20 +145,27 @@ describe('Ingredient routes', () => {
         .set('Authorization', `Bearer ${token}`);
 
       expect(res.statusCode).toBe(404);
-      expect(res.body).toEqual({
-        message: 'Ingredient not found',
-      });
+      expect(res.body).toEqual({ message: 'Ingredient not found' });
+    });
+
+    test('returns 401 when no token is provided', async () => {
+      const res = await request(app).get('/ingredient/1');
+
+      expect(res.statusCode).toBe(401);
     });
   });
 
+  // ---------------------------------------------------------------------------
+  // PATCH /ingredient/:id
+  // ---------------------------------------------------------------------------
   describe('PATCH /ingredient/:id', () => {
-    test('updates an ingredient name', async () => {
+    test('updates an ingredient', async () => {
       const ingredient = await createIngredient('milk');
 
       const res = await request(app)
         .patch(`/ingredient/${ingredient.ingredient_id}`)
         .set('Authorization', `Bearer ${token}`)
-        .send({ name: 'almond milk' });
+        .send({ name: 'Almond Milk' });
 
       expect(res.statusCode).toBe(200);
       expect(res.body).toHaveProperty('name', 'almond milk');
@@ -161,9 +180,8 @@ describe('Ingredient routes', () => {
         .send({});
 
       expect(res.statusCode).toBe(400);
-      expect(res.body).toEqual({
-        message: 'Name is required',
-      });
+      expect(res.body.message).toBe('Invalid request body');
+      expect(res.body.errors.fieldErrors.name).toContain('Invalid input: expected string, received undefined');
     });
 
     test('returns 404 when ingredient does not exist', async () => {
@@ -173,12 +191,21 @@ describe('Ingredient routes', () => {
         .send({ name: 'test' });
 
       expect(res.statusCode).toBe(404);
-      expect(res.body).toEqual({
-        message: 'Ingredient not found',
-      });
+      expect(res.body).toEqual({ message: 'Ingredient not found' });
+    });
+
+    test('returns 401 when no token is provided', async () => {
+      const res = await request(app)
+        .patch('/ingredient/1')
+        .send({ name: 'test' });
+
+      expect(res.statusCode).toBe(401);
     });
   });
 
+  // ---------------------------------------------------------------------------
+  // DELETE /ingredient/:id
+  // ---------------------------------------------------------------------------
   describe('DELETE /ingredient/:id', () => {
     test('deletes an ingredient', async () => {
       const ingredient = await createIngredient('milk');
@@ -202,9 +229,13 @@ describe('Ingredient routes', () => {
         .set('Authorization', `Bearer ${token}`);
 
       expect(res.statusCode).toBe(404);
-      expect(res.body).toEqual({
-        message: 'Ingredient not found',
-      });
+      expect(res.body).toEqual({ message: 'Ingredient not found' });
+    });
+
+    test('returns 401 when no token is provided', async () => {
+      const res = await request(app).delete('/ingredient/1');
+
+      expect(res.statusCode).toBe(401);
     });
   });
 });

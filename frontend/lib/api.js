@@ -54,6 +54,10 @@ export const updatePantryItem = (token, id, payload) =>
 
 export const addPantryItem = (token, payload) => fetchJson('/pantry', { method: 'POST', token, body: payload });
 
+export const getShoppingList = (token) => fetchJson('/shopping-list', { token });
+export const addShoppingListItem = (token, payload) => fetchJson('/shopping-list', { method: 'POST', token, body: payload });
+export const deleteShoppingListItem = (token, id) => fetchJson(`/shopping-list/${id}`, { method: 'DELETE', token });
+
 export const searchIngredients = (token, query = '') =>
   fetchJson(`/ingredient${query ? `?search=${encodeURIComponent(query)}` : ''}`, { token });
 
