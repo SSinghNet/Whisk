@@ -78,6 +78,7 @@ export default function RecipeDetailScreen({
   const [recipeDetail, setRecipeDetail] = useState(recipe);
   const [loading, setLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [addListLoading, setAddListLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const loadRecipe = async () => {
@@ -210,6 +211,36 @@ export default function RecipeDetailScreen({
     } catch (e) {
       Alert.alert('Error', e.message || 'Failed to add ingredient to shopping list');
     }
+  };
+
+  const handleAddAllMissingToShoppingList = async () => {
+    const missing = (currentRecipe.recipe_ingredient || []).filter((ing) => {
+      const s = ing.pantry_status?.status;
+      return s === 'missing' || s === 'insufficient';
+    });
+
+    if (!missing.length || !onAddIngredientToShoppingList) return;
+
+    setAddListLoading(true);
+    let added = 0;
+    for (const ing of missing) {
+      try {
+        await onAddIngredientToShoppingList({
+          ingredient_id: ing.ingredient_id,
+          ingredient: ing.ingredient,
+          quantity: ing.amount ?? 1,
+          unit: ing.unit ?? 'count',
+        });
+        added++;
+      } catch {
+        // already on list — skip
+      }
+    }
+    setAddListLoading(false);
+    Alert.alert(
+      'Shopping list updated',
+      `${added} ingredient${added !== 1 ? 's' : ''} added to your shopping list.`
+    );
   };
 
   const currentRecipe = recipeDetail || recipe;
@@ -348,6 +379,16 @@ export default function RecipeDetailScreen({
         />
       ) : (
         <>
+          {onAddIngredientToShoppingList && summary?.missing_ingredients?.length > 0 && (
+            <AppButton
+              title={`Add ${summary.missing_ingredients.length} missing to shopping list`}
+              variant="secondary"
+              onPress={handleAddAllMissingToShoppingList}
+              loading={addListLoading}
+              disabled={addListLoading || actionLoading}
+              style={styles.recipeActionButton}
+            />
+          )}
           <AppButton
             title="Make Recipe"
             onPress={handleMakeRecipe}
