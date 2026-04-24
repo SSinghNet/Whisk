@@ -2,7 +2,8 @@ import * as service from '../services/shoppingListService.js'
 
 export const getShoppingList = async (req, res) => {
     const supabase_uid = req.user.id
-    const shoppingList = await service.getShoppingList(supabase_uid)
+    const search = String(req.query?.search ?? '').trim()
+    const shoppingList = await service.getShoppingList(supabase_uid, search)
 
     res.status(200).json(shoppingList)
 }

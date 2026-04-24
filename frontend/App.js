@@ -34,10 +34,10 @@ export default function App() {
     const [addIngredient, setAddIngredient] = useState(null);
     const [shoppingListItems, setShoppingListItems] = useState([]);
 
-    async function refreshShoppingList(currentSession = session) {
+    async function refreshShoppingList(currentSession = session, query = '') {
         if (!currentSession?.access_token) return;
 
-        const data = await getShoppingList(currentSession.access_token);
+        const data = await getShoppingList(currentSession.access_token, query);
         setShoppingListItems(Array.isArray(data) ? data : []);
     }
 
@@ -218,9 +218,12 @@ export default function App() {
             {activeScreen === 'shoppingList' && (
                 <View style={styles.mainContent}>
                     <ShoppingListScreen
+                        session={session}
                         items={shoppingListItems}
+                        onAddItem={addItemToShoppingList}
                         onRemoveItem={removeShoppingListItemByIngredient}
                         onMoveToPantry={moveShoppingListItemToPantry}
+                        onRefresh={refreshShoppingList}
                     />
                 </View>
             )}

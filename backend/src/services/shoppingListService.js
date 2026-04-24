@@ -3,11 +3,24 @@ import { resolveUserId } from './userService.js'
 
 const toNumber = (value) => Number(value)
 
-export const getShoppingList = async (supabaseUid) => {
+export const getShoppingList = async (supabaseUid, search = '') => {
     const user_id = await resolveUserId(supabaseUid)
+    const normalizedSearch = String(search ?? '').trim()
 
     return await prisma.user_shoppinglist.findMany({
-        where: { user_id },
+        where: {
+            user_id,
+            ...(normalizedSearch
+                ? {
+                    ingredient: {
+                        name: {
+                            contains: normalizedSearch,
+                            mode: 'insensitive',
+                        },
+                    },
+                }
+                : {}),
+        },
         include: { ingredient: true },
         orderBy: [
             { ingredient: { name: 'asc' } },
