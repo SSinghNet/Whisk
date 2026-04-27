@@ -1,11 +1,33 @@
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
-const host = Constants.expoConfig?.hostUri?.split(':')[0] ?? '10.0.2.2';
-console.log(host);
-export const API_URL =
+const normalizeUrl = (url) => url?.trim().replace(/\/+$/, '');
+
+const getDevHost = () => {
+  const candidates = [
+    Constants.expoConfig?.hostUri,
+    Constants.expoGoConfig?.debuggerHost,
+    Constants.manifest2?.extra?.expoGo?.debuggerHost,
+    Constants.manifest?.debuggerHost,
+  ];
+
+  for (const candidate of candidates) {
+    const host = candidate?.split(':')?.[0];
+    if (host) return host;
+  }
+
+  return Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
+};
+
+const configuredApiUrl = normalizeUrl(process.env.EXPO_PUBLIC_API_URL);
+
+export const API_URL = configuredApiUrl || (
   process.env.EXPO_PUBLIC_APP_ENV === 'production'
     ? 'https://whisk-lznv.onrender.com'
-    : `http://${host}:3000`;
+    : `http://${getDevHost()}:3000`
+);
+
+console.log(`[api] Using API_URL: ${API_URL}`);
 
 const handleResponse = async (res) => {
   if (res.ok) return res.status === 204 ? null : res.json();

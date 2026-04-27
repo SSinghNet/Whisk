@@ -18,17 +18,18 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^15.1.1",
-    "@react-native-community/datetimepicker": "^8.1.1",
+    "@react-native-community/datetimepicker": "8.6.0",
     "@react-native-picker/picker": "^2.11.4",
     "@supabase/supabase-js": "^2.100.0",
     "expo": "^55.0.17",
-    "expo-camera": "~55.0.11",
+    "expo-camera": "~55.0.16",
     "expo-constants": "^55.0.7",
-    "expo-status-bar": "~55.0.4",
+    "expo-font": "~55.0.6",
+    "expo-status-bar": "~55.0.5",
     "react": "19.2.0",
-    "react-native": "0.83.2",
+    "react-native": "0.83.6",
     "react-native-date-picker": "^5.0.13",
-    "react-native-safe-area-context": "^5.7.0"
+    "react-native-safe-area-context": "~5.6.2"
   },
   "private": true
 }
