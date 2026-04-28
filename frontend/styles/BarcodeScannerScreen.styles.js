@@ -1,0 +1,148 @@
+import { StyleSheet } from 'react-native';
+import { COLORS, THEME } from '../styles/colors';
+
+export default StyleSheet.create({
+  center: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: THEME.spacing.lg,
+    backgroundColor: COLORS.background,
+  },
+  permissionText: {
+    fontSize: THEME.typography.fontSize.base,
+    color: COLORS.text,
+    marginBottom: THEME.spacing.lg,
+    textAlign: 'center',
+  },
+  button: {
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: THEME.spacing.lg,
+    paddingVertical: THEME.spacing.md,
+    borderRadius: THEME.sizing.radius.lg,
+    marginVertical: THEME.spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 48,
+  },
+  buttonText: {
+    color: COLORS.buttonText,
+    fontWeight: THEME.typography.fontWeight.semibold,
+    fontSize: THEME.typography.fontSize.base,
+  },
+  secondaryButton: {
+    marginTop: THEME.spacing.lg,
+    paddingHorizontal: THEME.spacing.lg,
+    paddingVertical: THEME.spacing.md,
+    borderRadius: THEME.sizing.radius.lg,
+    backgroundColor: COLORS.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 48,
+  },
+  secondaryButtonText: {
+    color: COLORS.text,
+    fontWeight: THEME.typography.fontWeight.medium,
+    fontSize: THEME.typography.fontSize.base,
+  },
+  container: {
+    flex: 1,
+    padding: THEME.spacing.lg,
+    backgroundColor: COLORS.surface,
+  },
+  title: {
+    fontSize: THEME.typography.fontSize.xxxl,
+    fontWeight: THEME.typography.fontWeight.bold,
+    color: COLORS.text,
+    marginBottom: THEME.spacing.md,
+    textAlign: 'center',
+  },
+  subtitle: {
+    fontSize: THEME.typography.fontSize.base,
+    color: COLORS.textSecondary,
+    marginBottom: THEME.spacing.lg,
+    textAlign: 'center',
+  },
+  productCard: {
+    backgroundColor: COLORS.background,
+    borderRadius: THEME.sizing.radius.lg,
+    padding: THEME.spacing.lg,
+    marginBottom: THEME.spacing.lg,
+  },
+  productName: {
+    fontSize: THEME.typography.fontSize.lg,
+    fontWeight: THEME.typography.fontWeight.bold,
+    color: COLORS.text,
+    marginBottom: THEME.spacing.sm,
+  },
+  brand: {
+    fontSize: THEME.typography.fontSize.base,
+    color: COLORS.textSecondary,
+    marginBottom: THEME.spacing.md,
+  },
+  ingredientLabel: {
+    fontSize: THEME.typography.fontSize.base,
+    color: COLORS.text,
+    fontWeight: THEME.typography.fontWeight.medium,
+  },
+  label: {
+    fontSize: THEME.typography.fontSize.base,
+    fontWeight: THEME.typography.fontWeight.semibold,
+    color: COLORS.text,
+    marginTop: THEME.spacing.lg,
+    marginBottom: THEME.spacing.sm,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: COLORS.borderSoft,
+    borderRadius: THEME.sizing.radius.lg,
+    padding: THEME.spacing.md,
+    backgroundColor: COLORS.surface,
+    color: COLORS.text,
+    fontSize: THEME.typography.fontSize.base,
+    marginBottom: THEME.spacing.md,
+  },
+  picker: {
+    marginBottom: THEME.spacing.md,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  scannerContainer: {
+    flex: 1,
+    justifyContent: 'flex-start',
+  },
+  overlay: {
+    flex: 1,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    paddingVertical: THEME.spacing.xl,
+  },
+  overlayTitle: {
+    fontSize: THEME.typography.fontSize.lg,
+    fontWeight: THEME.typography.fontWeight.bold,
+    color: COLORS.buttonText,
+    marginBottom: THEME.spacing.xl,
+  },
+  scanFrame: {
+    width: 250,
+    height: 250,
+    borderWidth: 2,
+    borderColor: COLORS.primary,
+    borderRadius: THEME.sizing.radius.lg,
+  },
+  lookingUpBox: {
+    paddingVertical: THEME.spacing.lg,
+    paddingHorizontal: THEME.spacing.xl,
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    borderRadius: THEME.sizing.radius.lg,
+    alignItems: 'center',
+    gap: THEME.spacing.md,
+  },
+  lookingUpText: {
+    color: COLORS.buttonText,
+    fontSize: THEME.typography.fontSize.base,
+    fontWeight: THEME.typography.fontWeight.medium,
+  },
+});

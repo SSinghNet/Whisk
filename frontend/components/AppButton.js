@@ -1,24 +1,78 @@
 import React from 'react';
 import { TouchableOpacity, Text, ActivityIndicator, StyleSheet } from 'react-native';
-import { COLORS } from '../styles/colors';
+import { COLORS, THEME } from '../styles/colors';
 
-export default function AppButton({ title, onPress, variant = 'primary', disabled = false, loading = false, style }) {
-  const bgColor =
-    variant === 'primary' ? COLORS.primary :
-    variant === 'secondary' ? COLORS.primaryAlt :
-    variant === 'danger' ? COLORS.danger :
-    COLORS.border;
+export default function AppButton({
+  title,
+  onPress,
+  variant = 'primary',
+  disabled = false,
+  loading = false,
+  style,
+}) {
+  const variantStyles = {
+    primary: {
+      container: {
+        backgroundColor: COLORS.primary,
+        borderWidth: 0,
+        minHeight: THEME.sizing.buttonHeight,
+      },
+      text: { color: COLORS.buttonText },
+      spinner: COLORS.buttonText,
+    },
+    secondary: {
+      container: {
+        backgroundColor: 'transparent',
+        borderWidth: 1.5,
+        borderColor: COLORS.primary,
+        minHeight: THEME.sizing.buttonHeight,
+      },
+      text: { color: COLORS.primary },
+      spinner: COLORS.primary,
+    },
+    danger: {
+      container: {
+        backgroundColor: COLORS.danger,
+        borderWidth: 0,
+        minHeight: THEME.sizing.buttonHeight,
+      },
+      text: { color: COLORS.buttonText },
+      spinner: COLORS.buttonText,
+    },
+    ghost: {
+      container: {
+        backgroundColor: 'transparent',
+        borderWidth: 0,
+        minHeight: 0,
+        paddingVertical: THEME.spacing.sm,
+      },
+      text: {
+        color: COLORS.primary,
+        fontSize: THEME.typography.fontSize.sm,
+        fontWeight: THEME.typography.fontWeight.medium,
+      },
+      spinner: COLORS.primary,
+    },
+  };
+
+  const v = variantStyles[variant] ?? variantStyles.primary;
 
   return (
     <TouchableOpacity
       onPress={onPress}
       disabled={disabled || loading}
-      style={[styles.button, { backgroundColor: bgColor, opacity: disabled || loading ? 0.6 : 1 }, style]}
+      activeOpacity={0.85}
+      style={[
+        styles.button,
+        v.container,
+        { opacity: disabled || loading ? 0.55 : 1 },
+        style,
+      ]}
     >
       {loading ? (
-        <ActivityIndicator color={COLORS.surface} />
+        <ActivityIndicator color={v.spinner} />
       ) : (
-        <Text style={styles.text}>{title}</Text>
+        <Text style={[styles.text, v.text]}>{title}</Text>
       )}
     </TouchableOpacity>
   );
@@ -26,16 +80,14 @@ export default function AppButton({ title, onPress, variant = 'primary', disable
 
 const styles = StyleSheet.create({
   button: {
-    borderRadius: 10,
-    height: 44,
+    borderRadius: THEME.sizing.radius.full,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 18,
-    marginVertical: 6,
+    paddingHorizontal: THEME.spacing.xl,
+    marginVertical: THEME.spacing.sm,
   },
   text: {
-    color: COLORS.surface,
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: THEME.typography.fontSize.md,
+    fontWeight: THEME.typography.fontWeight.semibold,
   },
 });

@@ -25,6 +25,14 @@ export default StyleSheet.create({
     backgroundColor: COLORS.surface,
     color: COLORS.text,
   },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  iconAction: {
+    padding: 4,
+  },
   edit: { color: COLORS.primary, fontWeight: '500' },
   save: { color: COLORS.success, fontWeight: '500' },
   cancel: { color: COLORS.textSecondary, fontWeight: '500' },

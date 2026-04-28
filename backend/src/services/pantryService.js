@@ -16,18 +16,21 @@ export const getPantry = async (supabaseUid, search) => {
     return await prisma.pantry_ingredient.findMany({
         where,
         include: { ingredient: true },
+        orderBy: [
+            { ingredient: { name: 'asc' } },
+            { expiry_date: 'asc' },
+            { pantry_ingredient_id: 'asc' },
+        ],
     })
 }
 
-export const getPantryIngredient = async (supabaseUid, ingredientId) => {
+export const getPantryIngredient = async (supabaseUid, pantryIngredientId) => {
     const user_id = await resolveUserId(supabaseUid)
 
-    return await prisma.pantry_ingredient.findUnique({
+    return await prisma.pantry_ingredient.findFirst({
         where: {
-            user_id_ingredient_id: {
-                user_id,
-                ingredient_id: Number(ingredientId),
-            },
+            pantry_ingredient_id: Number(pantryIngredientId),
+            user_id,
         },
         include: { ingredient: true },
     })
@@ -35,21 +38,6 @@ export const getPantryIngredient = async (supabaseUid, ingredientId) => {
 
 export const postPantryIngredient = async (supabaseUid, data) => {
     const user_id = await resolveUserId(supabaseUid)
-
-    const existing = await prisma.pantry_ingredient.findUnique({
-        where: {
-            user_id_ingredient_id: {
-                user_id,
-                ingredient_id: Number(data.ingredient_id),
-            },
-        },
-    })
-
-    if (existing) {
-        const error = new Error('Ingredient already exists in pantry')
-        error.statusCode = 409
-        throw error
-    }
 
     return await prisma.pantry_ingredient.create({
         data: {
@@ -63,15 +51,13 @@ export const postPantryIngredient = async (supabaseUid, data) => {
     })
 }
 
-export const updatePantryIngredient = async (supabaseUid, ingredientId, data) => {
+export const updatePantryIngredient = async (supabaseUid, pantryIngredientId, data) => {
     const user_id = await resolveUserId(supabaseUid)
 
-    const existing = await prisma.pantry_ingredient.findUnique({
+    const existing = await prisma.pantry_ingredient.findFirst({
         where: {
-            user_id_ingredient_id: {
-                user_id,
-                ingredient_id: Number(ingredientId),
-            },
+            pantry_ingredient_id: Number(pantryIngredientId),
+            user_id,
         },
     })
 
@@ -86,25 +72,20 @@ export const updatePantryIngredient = async (supabaseUid, ingredientId, data) =>
 
     return await prisma.pantry_ingredient.update({
         where: {
-            user_id_ingredient_id: {
-                user_id,
-                ingredient_id: Number(ingredientId),
-            },
+            pantry_ingredient_id: Number(pantryIngredientId),
         },
         data: updateData,
         include: { ingredient: true },
     })
 }
 
-export const deletePantryIngredient = async (supabaseUid, ingredientId) => {
+export const deletePantryIngredient = async (supabaseUid, pantryIngredientId) => {
     const user_id = await resolveUserId(supabaseUid)
 
-    const existing = await prisma.pantry_ingredient.findUnique({
+    const existing = await prisma.pantry_ingredient.findFirst({
         where: {
-            user_id_ingredient_id: {
-                user_id,
-                ingredient_id: Number(ingredientId),
-            },
+            pantry_ingredient_id: Number(pantryIngredientId),
+            user_id,
         },
     })
 
@@ -114,10 +95,7 @@ export const deletePantryIngredient = async (supabaseUid, ingredientId) => {
 
     await prisma.pantry_ingredient.delete({
         where: {
-            user_id_ingredient_id: {
-                user_id,
-                ingredient_id: Number(ingredientId),
-            },
+            pantry_ingredient_id: Number(pantryIngredientId),
         },
     })
 

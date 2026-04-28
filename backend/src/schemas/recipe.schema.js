@@ -1,117 +1,231 @@
 import { z } from 'zod'
 import { registry } from '../lib/swagger.js'
-import { UnitCode } from 'shared.schema.js'
+import { IngredientResponseSchema } from './ingredient.schema.js'
+import { UnitCode } from './shared.schema.js'
+
+export const RecipeIngredientSchema = z.object({
+  recipe_id: z.number(),
+  ingredient_id: z.number(),
+  amount: z.number().nullable().optional(),
+  unit: UnitCode,
+  ingredient: IngredientResponseSchema,
+  pantry_status: z.object({
+    status: z.enum(['missing', 'insufficient', 'available']),
+    reason: z.string(),
+    required_quantity: z.number().nullable(),
+    required_unit: UnitCode,
+    pantry_quantity: z.number().nullable(),
+    pantry_items: z.array(z.object({
+      pantry_ingredient_id: z.number(),
+      quantity: z.number().nullable(),
+      unit: UnitCode,
+      expiry_date: z.string().nullable(),
+    })),
+    missing_quantity: z.number().nullable(),
+    missing_unit: UnitCode.nullable(),
+    deduction_supported: z.boolean(),
+    can_deduct: z.boolean(),
+  }).optional(),
+})
+
+export const PantryStatusSummarySchema = z.object({
+  available_count: z.number(),
+  insufficient_count: z.number(),
+  missing_count: z.number(),
+  missing_ingredients: z.array(z.object({
+    ingredient_id: z.number(),
+    name: z.string(),
+    status: z.enum(['missing', 'insufficient']),
+    missing_quantity: z.number().nullable(),
+    missing_unit: UnitCode.nullable(),
+    reason: z.string(),
+  })),
+  make_recipe_blockers: z.array(z.object({
+    ingredient_id: z.number(),
+    name: z.string(),
+    reason: z.string(),
+    status: z.enum(['missing', 'insufficient', 'available']),
+  })),
+  can_make_recipe: z.boolean(),
+})
 
 export const RecipeResponseSchema = registry.register(
-    'Recipe',
-    z.object({
-      recipe_id:    z.number(),
-      user_id:      z.number(),
-      title:        z.string(),
-      instructions: z.string(),
-      image_url:    z.string(),
-      yield_amount: z.number(),
-      yield_unit:   UnitCode,
-      created_at: z.iso.datetime(),
-    })
-  )
+  'Recipe',
+  z.object({
+    recipe_id: z.number(),
+    title: z.string(),
+    instructions: z.string().nullable().optional(),
+    image_url: z.string().nullable().optional(),
+    yield_amount: z.number().nullable().optional(),
+    yield_unit: UnitCode.nullable().optional(),
+    created_at: z.string(),
+    recipe_ingredient: z.array(RecipeIngredientSchema),
+    pantry_status_summary: PantryStatusSummarySchema.optional(),
+  })
+)
 
 export const CreateRecipeSchema = z.object({
-  title:        z.string().min(1),
-  instructions: z.string().min(1),
-  image_url:    z.string().url(),
-  yield_amount: z.number().positive(),
-  yield_unit:   UnitCode,
+  title: z.string().min(1),
+  instructions: z.string().optional(),
+  image_url: z.string().optional(),
+  yield_amount: z.number().positive().optional(),
+  yield_unit: UnitCode.optional(),
 })
 
 export const UpdateRecipeSchema = z.object({
-  title:        z.string().min(1).optional(),
-  instructions: z.string().min(1).optional(),
-  image_url:    z.string().url().optional(),
+  title: z.string().min(1).optional(),
+  instructions: z.string().optional(),
+  image_url: z.string().optional(),
   yield_amount: z.number().positive().optional(),
-  yield_unit:   UnitCode.optional(),
+  yield_unit: UnitCode.optional(),
 })
 
+export const UserRecipeSchema = registry.register(
+  'UserRecipe',
+  z.object({
+    user_id: z.number(),
+    recipe_id: z.number(),
+  })
+)
 
-// GET /recipes
+// GET /recipe
 registry.registerPath({
   method: 'get',
-  path: '/recipes',
-  summary: 'Get all recipes',
+  path: '/recipe',
+  summary: 'Get all recipes in database',
   tags: ['Recipes'],
   responses: {
     200: {
-      description: 'List of recipes',
-      content: { 'application/json': { schema: z.array(RecipeResponseSchema) } }
-    }
-  }
+      description: 'List of all recipes',
+      content: { 'application/json': { schema: z.array(RecipeResponseSchema) } },
+    },
+  },
 })
 
-
-// GET /recipes/:id
+// GET /recipe/user
 registry.registerPath({
   method: 'get',
-  path: '/recipes/{id}',
+  path: '/recipe/user',
+  summary: 'Get recipes for authenticated user',
+  tags: ['Recipes'],
+  responses: {
+    200: {
+      description: 'List of user recipes',
+      content: { 'application/json': { schema: z.array(RecipeResponseSchema) } },
+    },
+  },
+})
+
+// GET /recipe/:id
+registry.registerPath({
+  method: 'get',
+  path: '/recipe/{id}',
   summary: 'Get a recipe by ID',
   tags: ['Recipes'],
+  request: { params: z.object({ id: z.string().regex(/^[0-9]+$/) }) },
   responses: {
     200: {
       description: 'Recipe found',
-      content: { 'application/json': { schema: RecipeResponseSchema } }
+      content: { 'application/json': { schema: RecipeResponseSchema } },
     },
-    404: { description: 'Recipe not found' }
-  }
+    404: { description: 'Recipe not found' },
+  },
 })
 
-
-// POST /recipes
+// POST /recipe/:id/make
 registry.registerPath({
   method: 'post',
-  path: '/recipes',
+  path: '/recipe/{id}/make',
+  summary: 'Deduct pantry ingredients for a recipe',
+  tags: ['Recipes'],
+  request: { params: z.object({ id: z.string().regex(/^[0-9]+$/) }) },
+  responses: {
+    200: {
+      description: 'Recipe made and pantry updated',
+      content: { 'application/json': { schema: RecipeResponseSchema } },
+    },
+    404: { description: 'Recipe not found' },
+    409: { description: 'Recipe cannot be made with current pantry ingredients' },
+  },
+})
+
+// POST /recipe
+registry.registerPath({
+  method: 'post',
+  path: '/recipe',
   summary: 'Create a new recipe',
   tags: ['Recipes'],
   request: {
-    body: {
-      content: { 'application/json': { schema: CreateRecipeSchema } }
-    }
+    body: { content: { 'application/json': { schema: CreateRecipeSchema } } },
   },
   responses: {
     201: {
       description: 'Recipe created',
-      content: { 'application/json': { schema: RecipeResponseSchema } }
-    }
-  }
+      content: { 'application/json': { schema: RecipeResponseSchema } },
+    },
+    400: { description: 'Bad request' },
+  },
 })
 
-
-// PUT /recipes/:id
+// PATCH /recipe/:id
 registry.registerPath({
-  method: 'put',
-  path: '/recipes/{id}',
+  method: 'patch',
+  path: '/recipe/{id}',
   summary: 'Update a recipe',
   tags: ['Recipes'],
   request: {
-    body: {
-      content: { 'application/json': { schema: UpdateRecipeSchema } }
-    }
+    params: z.object({ id: z.string().regex(/^[0-9]+$/) }),
+    body: { content: { 'application/json': { schema: UpdateRecipeSchema } } },
   },
   responses: {
     200: {
       description: 'Recipe updated',
-      content: { 'application/json': { schema: RecipeResponseSchema } }
+      content: { 'application/json': { schema: RecipeResponseSchema } },
     },
-    404: { description: 'Recipe not found' }
-  }
+    400: { description: 'Bad request' },
+    404: { description: 'Recipe not found' },
+  },
 })
 
-
-// DELETE /recipes/:id
+// DELETE /recipe/:id
 registry.registerPath({
   method: 'delete',
-  path: '/recipes/{id}',
+  path: '/recipe/{id}',
   summary: 'Delete a recipe',
   tags: ['Recipes'],
+  request: { params: z.object({ id: z.string().regex(/^[0-9]+$/) }) },
   responses: {
-    204: { description: 'Recipe deleted' }
-  }
+    204: { description: 'Recipe deleted' },
+    404: { description: 'Recipe not found' },
+  },
+})
+
+// POST /recipe/:id/users
+registry.registerPath({
+  method: 'post',
+  path: '/recipe/{id}/users',
+  summary: 'Add recipe to user',
+  tags: ['Recipes'],
+  request: { params: z.object({ id: z.string().regex(/^[0-9]+$/) }) },
+  responses: {
+    201: {
+      description: 'Recipe added to user',
+      content: { 'application/json': { schema: UserRecipeSchema } },
+    },
+    404: { description: 'Recipe not found' },
+    409: { description: 'Recipe already added by user' },
+  },
+})
+
+// DELETE /recipe/:id/users
+registry.registerPath({
+  method: 'delete',
+  path: '/recipe/{id}/users',
+  summary: 'Remove recipe from user',
+  tags: ['Recipes'],
+  request: { params: z.object({ id: z.string().regex(/^[0-9]+$/) }) },
+  responses: {
+    204: { description: 'Recipe removed from user' },
+    404: { description: 'Recipe not found for user' },
+  },
 })
