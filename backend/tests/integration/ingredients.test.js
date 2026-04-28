@@ -43,15 +43,15 @@ describe('Ingredient routes', () => {
   // POST /ingredient
   // ---------------------------------------------------------------------------
   describe('POST /ingredient', () => {
-    test('creates an ingredient and normalizes name to lowercase', async () => {
+    test('creates an ingredient and normalizes name', async () => {
       const res = await request(app)
         .post('/ingredient')
         .set('Authorization', `Bearer ${token}`)
-        .send({ name: 'Rice' });
+        .send({ name: 'riCe' });
 
       expect(res.statusCode).toBe(201);
       expect(res.body).toHaveProperty('ingredient_id');
-      expect(res.body).toHaveProperty('name', 'rice');
+      expect(res.body).toHaveProperty('name', 'Rice');
 
       createdIds.push(Number(res.body.ingredient_id));
     });
@@ -113,7 +113,7 @@ describe('Ingredient routes', () => {
 
       expect(res.statusCode).toBe(200);
       expect(res.body.length).toBe(1);
-      expect(res.body[0].name).toContain('rice');
+      expect(res.body[0].name).toContain('Rice');
     });
 
     test('returns 401 when no token is provided', async () => {
@@ -136,7 +136,7 @@ describe('Ingredient routes', () => {
 
       expect(res.statusCode).toBe(200);
       expect(Number(res.body.ingredient_id)).toBe(Number(ingredient.ingredient_id));
-      expect(res.body).toHaveProperty('name', 'milk');
+      expect(res.body).toHaveProperty('name', 'Milk');
     });
 
     test('returns 404 when ingredient not found', async () => {
@@ -168,7 +168,7 @@ describe('Ingredient routes', () => {
         .send({ name: 'Almond Milk' });
 
       expect(res.statusCode).toBe(200);
-      expect(res.body).toHaveProperty('name', 'almond milk');
+      expect(res.body).toHaveProperty('name', 'Almond Milk');
     });
 
     test('returns 400 when name is missing', async () => {

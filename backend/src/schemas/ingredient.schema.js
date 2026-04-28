@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { registry } from '../lib/swagger.js'
+import {normalizeInput} from './shared.schema.js'
 
 const idParam = z.object({ id: z.string().regex(/^[0-9]+$/) })
 
@@ -21,7 +22,7 @@ export const IngredientCreateSchema = registry.register(
       .max(100, 'Name cannot exceed 100 characters')
       .trim()
       .regex(/^[a-zA-Z\s]+$/, 'Name can only contain letters and spaces')
-      .toLowerCase(),
+      .transform(normalizeInput),
   })
 )
 

@@ -35,7 +35,7 @@ const UNIT_ALIASES = {
   serving: 'count',
 }
 
-const sanitizeUnit = (unit) => {
+export const sanitizeUnit = (unit) => {
   if (!unit) return 'count'
   const normalized = String(unit).toLowerCase().trim()
   if (VALID_UNITS.has(normalized)) return normalized
@@ -54,7 +54,7 @@ const formatIngredientLine = (ingredient) => {
   return [amount, unit && unit !== 'count' ? unit : null, name].filter(Boolean).join(' ').trim()
 }
 
-const normalizeIngredient = (ingredient) => {
+export const normalizeIngredient = (ingredient) => {
   if (typeof ingredient === 'string') {
     return {
       name: ingredient.trim(),
@@ -81,7 +81,7 @@ const normalizeIngredient = (ingredient) => {
   }
 }
 
-const normalizeRecommendation = (recipe) => {
+export const normalizeRecommendation = (recipe) => {
   const ingredients = Array.isArray(recipe?.ingredients)
     ? recipe.ingredients.map(normalizeIngredient).filter((ingredient) => ingredient.name)
     : []

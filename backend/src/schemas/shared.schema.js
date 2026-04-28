@@ -22,3 +22,10 @@ export const IdParamSchema = z.object({
 export const SearchQuerySchema = z.object({
   search: z.optional(z.string().trim().min(1).toLowerCase()),
 })
+
+export const normalizeInput = (val) =>
+  val
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .replace(/\b\w/g, (char) => char.toUpperCase());
