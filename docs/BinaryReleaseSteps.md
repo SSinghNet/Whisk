@@ -42,6 +42,12 @@ adb install -r [apk-file].apk
 
 ## Step 3 — Run the Backend
 
+> **Important (macOS):** Before running the backend for the first time, clear the quarantine flag:
+>
+> ```bash
+> xattr -rd com.apple.quarantine whisk-backend
+> ```
+
 **macOS / Linux**
 ```bash
 ./whisk-backend-*
