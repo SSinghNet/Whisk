@@ -50,12 +50,13 @@ adb install -r [apk-file].apk
 
 **macOS / Linux**
 ```bash
-./whisk-backend-*
+chmod +x ./whisk-backend
+./whisk-backend
 ```
 
 **Windows (PowerShell)**
 ```powershell
-.\whisk-backend-windows-x64.exe
+.\whisk-backend.exe
 ```
 
 ---
