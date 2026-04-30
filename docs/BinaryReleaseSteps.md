@@ -50,7 +50,7 @@ adb install -r [apk-file].apk
 
 **macOS / Linux**
 ```bash
-chmod +x ./whisk-backend
+chmod +x whisk-backend
 ./whisk-backend
 ```
 
