@@ -68,7 +68,7 @@ export default function LoginScreen({ onLogin, onSwitchToSignup, loading, error 
                 <AppButton
                     title="Need an account? Sign up"
                     onPress={onSwitchToSignup}
-                    variant="secondary"
+                    variant="ghost"
                     style={styles.secondaryButton}
                 />
             </View>

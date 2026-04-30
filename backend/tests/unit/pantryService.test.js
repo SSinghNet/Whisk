@@ -3,6 +3,7 @@ import { jest } from '@jest/globals'
 const mockPrisma = {
   pantry_ingredient: {
     findMany: jest.fn(),
+    findFirst: jest.fn(),
     findUnique: jest.fn(),
     create: jest.fn(),
     update: jest.fn(),
@@ -31,10 +32,9 @@ describe('pantryService (unit)', () => {
   })
 
   describe('postPantryIngredient', () => {
-    test('creates a pantry item when not existing', async () => {
-      mockPrisma.pantry_ingredient.findUnique.mockResolvedValue(null)
-
+    test('creates a pantry item without blocking duplicate ingredients', async () => {
       mockPrisma.pantry_ingredient.create.mockResolvedValue({
+        pantry_ingredient_id: 99,
         user_id: mockUserId,
         ingredient_id: 10,
         quantity: 3,
@@ -48,6 +48,7 @@ describe('pantryService (unit)', () => {
       })
 
       expect(result).toHaveProperty('ingredient_id', 10)
+      expect(result).toHaveProperty('pantry_ingredient_id', 99)
       expect(mockPrisma.pantry_ingredient.create).toHaveBeenCalledWith({
         data: {
           user_id: mockUserId,
@@ -59,24 +60,11 @@ describe('pantryService (unit)', () => {
         include: { ingredient: true },
       })
     })
-
-    test('throws error if ingredient already exists', async () => {
-      mockPrisma.pantry_ingredient.findUnique.mockResolvedValue({ ingredient_id: 10 })
-
-      await expect(
-        pantryService.postPantryIngredient('uid', {
-          ingredient_id: 10,
-        })
-      ).rejects.toMatchObject({
-        message: 'Ingredient already exists in pantry',
-        statusCode: 409,
-      })
-    })
   })
 
   describe('updatePantryIngredient', () => {
     test('returns null if ingredient not found', async () => {
-      mockPrisma.pantry_ingredient.findUnique.mockResolvedValue(null)
+      mockPrisma.pantry_ingredient.findFirst.mockResolvedValue(null)
 
       const result = await pantryService.updatePantryIngredient('uid', 10, {
         quantity: 5,
@@ -86,9 +74,13 @@ describe('pantryService (unit)', () => {
     })
 
     test('updates only provided fields', async () => {
-      mockPrisma.pantry_ingredient.findUnique.mockResolvedValue({ ingredient_id: 10 })
+      mockPrisma.pantry_ingredient.findFirst.mockResolvedValue({
+        pantry_ingredient_id: 10,
+        ingredient_id: 10,
+      })
 
       mockPrisma.pantry_ingredient.update.mockResolvedValue({
+        pantry_ingredient_id: 10,
         ingredient_id: 10,
         quantity: 5,
       })
@@ -99,10 +91,7 @@ describe('pantryService (unit)', () => {
 
       expect(mockPrisma.pantry_ingredient.update).toHaveBeenCalledWith({
         where: {
-          user_id_ingredient_id: {
-            user_id: mockUserId,
-            ingredient_id: 10,
-          },
+          pantry_ingredient_id: 10,
         },
         data: { quantity: 5 },
         include: { ingredient: true },
@@ -114,7 +103,7 @@ describe('pantryService (unit)', () => {
 
   describe('deletePantryIngredient', () => {
     test('returns null if ingredient not found', async () => {
-      mockPrisma.pantry_ingredient.findUnique.mockResolvedValue(null)
+      mockPrisma.pantry_ingredient.findFirst.mockResolvedValue(null)
 
       const result = await pantryService.deletePantryIngredient('uid', 10)
 
@@ -122,7 +111,8 @@ describe('pantryService (unit)', () => {
     })
 
     test('deletes ingredient if found', async () => {
-      mockPrisma.pantry_ingredient.findUnique.mockResolvedValue({
+      mockPrisma.pantry_ingredient.findFirst.mockResolvedValue({
+        pantry_ingredient_id: 10,
         ingredient_id: 10,
       })
 
@@ -132,10 +122,7 @@ describe('pantryService (unit)', () => {
 
       expect(mockPrisma.pantry_ingredient.delete).toHaveBeenCalledWith({
         where: {
-          user_id_ingredient_id: {
-            user_id: mockUserId,
-            ingredient_id: 10,
-          },
+          pantry_ingredient_id: 10,
         },
       })
 

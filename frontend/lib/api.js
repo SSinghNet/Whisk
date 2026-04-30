@@ -1,11 +1,33 @@
 import Constants from 'expo-constants';
+import { Platform } from 'react-native';
 
-const host = Constants.expoConfig?.hostUri?.split(':')[0] ?? '10.0.2.2';
-console.log(host);
-export const API_URL =
+const normalizeUrl = (url) => url?.trim().replace(/\/+$/, '');
+
+const getDevHost = () => {
+  const candidates = [
+    Constants.expoConfig?.hostUri,
+    Constants.expoGoConfig?.debuggerHost,
+    Constants.manifest2?.extra?.expoGo?.debuggerHost,
+    Constants.manifest?.debuggerHost,
+  ];
+
+  for (const candidate of candidates) {
+    const host = candidate?.split(':')?.[0];
+    if (host) return host;
+  }
+
+  return Platform.OS === 'android' ? '10.0.2.2' : 'localhost';
+};
+
+const configuredApiUrl = normalizeUrl(process.env.EXPO_PUBLIC_API_URL);
+
+export const API_URL = configuredApiUrl || (
   process.env.EXPO_PUBLIC_APP_ENV === 'production'
     ? 'https://whisk-lznv.onrender.com'
-    : `http://${host}:3000`;
+    : `http://${getDevHost()}:3000`
+);
+
+console.log(`[api] Using API_URL: ${API_URL}`);
 
 const handleResponse = async (res) => {
   if (res.ok) return res.status === 204 ? null : res.json();
@@ -35,6 +57,13 @@ const fetchJson = async (path, { method = 'GET', token, body } = {}) => {
 };
 
 export const getRecipes = (token) => fetchJson('/recipe', { token });
+export const createRecipe = (token, payload) => fetchJson('/recipe', { method: 'POST', token, body: payload });
+export const getUserRecipes = (token, query = '') =>
+  fetchJson(`/recipe/user${query ? `?search=${encodeURIComponent(query)}` : ''}`, { token });
+export const getRecipe = (token, id) => fetchJson(`/recipe/${id}`, { token });
+export const makeRecipe = (token, recipeId) => fetchJson(`/recipe/${recipeId}/make`, { method: 'POST', token });
+export const addRecipeToUser = (token, recipeId) => fetchJson(`/recipe/${recipeId}/users`, { method: 'POST', token });
+export const removeRecipeFromUser = (token, recipeId) => fetchJson(`/recipe/${recipeId}/users`, { method: 'DELETE', token });
 export const createUserRecord = (token) => fetchJson('/users/register', { method: 'POST', token });
 
 export const getPantryItems = (token, query = '') =>
@@ -47,6 +76,11 @@ export const updatePantryItem = (token, id, payload) =>
 
 export const addPantryItem = (token, payload) => fetchJson('/pantry', { method: 'POST', token, body: payload });
 
+export const getShoppingList = (token, query = '') =>
+  fetchJson(`/shopping-list${query ? `?search=${encodeURIComponent(query)}` : ''}`, { token });
+export const addShoppingListItem = (token, payload) => fetchJson('/shopping-list', { method: 'POST', token, body: payload });
+export const deleteShoppingListItem = (token, id) => fetchJson(`/shopping-list/${id}`, { method: 'DELETE', token });
+
 export const searchIngredients = (token, query = '') =>
   fetchJson(`/ingredient${query ? `?search=${encodeURIComponent(query)}` : ''}`, { token });
 
@@ -57,3 +91,12 @@ export const lookupBarcode = (token, barcode) => fetchJson(`/product/${barcode}`
 export const getIngredients = (token) => fetchJson('/ingredient', { token });
 export const deleteIngredient = (token, id) => fetchJson(`/ingredient/${id}`, { method: 'DELETE', token });
 export const updateIngredient = (token, id, name) => fetchJson(`/ingredient/${id}`, { method: 'PATCH', token, body: { name: name.trim() } });
+
+export const searchEdamamRecipes = (token, query, from = 0) =>
+  fetchJson(`/recipe/edamam?q=${encodeURIComponent(query)}&from=${from}`, { token });
+
+export const importEdamamRecipe = (token, payload) =>
+  fetchJson('/recipe/edamam/import', { method: 'POST', token, body: payload });
+
+export const getRecommendations = (token) =>
+  fetchJson('/recommendations', { method: 'POST', token });
